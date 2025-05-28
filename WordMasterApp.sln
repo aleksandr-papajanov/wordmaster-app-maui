@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36121.58 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMasterApp", "WordMasterApp\WordMasterApp.csproj", "{E73D6924-32DB-4450-86D8-2BA270BB6C1D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMaster.Data", "WordMaster.Data\WordMaster.Data.csproj", "{F8B13DA3-49C3-4682-9447-5B974246949F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,10 @@ Global
 		{E73D6924-32DB-4450-86D8-2BA270BB6C1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E73D6924-32DB-4450-86D8-2BA270BB6C1D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E73D6924-32DB-4450-86D8-2BA270BB6C1D}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{F8B13DA3-49C3-4682-9447-5B974246949F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8B13DA3-49C3-4682-9447-5B974246949F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8B13DA3-49C3-4682-9447-5B974246949F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8B13DA3-49C3-4682-9447-5B974246949F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
