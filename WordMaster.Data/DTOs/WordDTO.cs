@@ -1,19 +1,16 @@
-﻿using Realms;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WordMaster.Data.Models
+namespace WordMaster.Data.DTOs
 {
-    public class Word : RealmObject
+    public class WordDTO : IDisblayable
     {
-        [PrimaryKey]
-        public Guid Id { get; set; } = Guid.NewGuid();
-
+        public Guid Id { get; set; }
         public string Text { get; set; } = string.Empty;
         public string Translation { get; set; } = string.Empty;
-        public string Definition { get; set; } = string.Empty;
+        public string? Definition { get; set; }
     }
 }

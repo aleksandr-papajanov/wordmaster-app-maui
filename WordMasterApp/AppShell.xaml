@@ -4,12 +4,18 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:WordMasterApp"
+    xmlns:v="clr-namespace:WordMasterApp.Views"
     Shell.FlyoutBehavior="Disabled"
     Title="WordMasterApp">
 
+    <TabBar>
+        <ShellContent Title="Words" ContentTemplate="{DataTemplate v:WordListPage}" Route="WordListPage" />
+        <ShellContent Title="Add" ContentTemplate="{DataTemplate v:WordPage}" Route="WordPage" />
+    </TabBar>
+
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Title="About Page"
+        Route="about"
+        ContentTemplate="{DataTemplate v:WordListPage}"/>
 
 </Shell>

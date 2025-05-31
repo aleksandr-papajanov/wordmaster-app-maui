@@ -8,12 +8,12 @@ using WordMaster.Data.Infrastructure.Interfaces;
 
 namespace WordMaster.Data.Infrastructure
 {
-    internal class RealmRepository<T> : IRepository<T>
+    public class Repository<T> : IRepository<T>
         where T : IRealmObject
     {
         private readonly IDataContext _context;
 
-        public RealmRepository(IDataContext context)
+        public Repository(IDataContext context)
         {
             _context = context;
         }
@@ -38,6 +38,11 @@ namespace WordMaster.Data.Infrastructure
         public void Delete(T entity)
         {
             _context.Delete(entity);
+        }
+
+        public async Task<Transaction> BeginWriteAsync(CancellationToken cancellationToken)
+        {
+            return await _context.BeginWriteAsync(cancellationToken);
         }
     }
 }

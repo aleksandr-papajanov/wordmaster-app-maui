@@ -11,7 +11,7 @@ using WordMaster.Data.Models;
 
 namespace WordMaster.Data.Infrastructure
 {
-    internal class RealmDataContext : IDataContext
+    public class RealmDataContext : IDataContext
     {
         private readonly Realm _realm;
         private readonly string _dbPath;
@@ -71,6 +71,27 @@ namespace WordMaster.Data.Infrastructure
 
                 Console.WriteLine("Seeded predefined languages.");
             }
+
+            if (!_realm.All<Word>().Any())
+            {
+                var words = new List<Word>
+                {
+                    new Word { Id = Guid.NewGuid(), Text = "Hello", Definition = "A greeting", Translation = "Привет" },
+                    new Word { Id = Guid.NewGuid(), Text = "World", Definition = "The earth, together with all of its countries and peoples", Translation = "Мир" },
+                    new Word { Id = Guid.NewGuid(), Text = "Hej", Definition = "Ett hälsningsord", Translation = "Hello" },
+                    new Word { Id = Guid.NewGuid(), Text = "Världen", Definition = "Jorden, tillsammans med alla dess länder och folk", Translation = "World" }
+                };
+
+                _realm.Write(() =>
+                {
+                    foreach (var word in words)
+                    {
+                        _realm.Add(word);
+                    }
+                });
+
+                Console.WriteLine("Seeded predefined words.");
+            }
         }
 
         #region IDataContext Implementation
@@ -84,19 +105,23 @@ namespace WordMaster.Data.Infrastructure
             return _realm.Find<T>(id);
         }
 
-        public T Create<T>(T entity) where T : IRealmObject
+        public void Create<T>(T entity) where T : IRealmObject
         {
-            return _realm.Write(() => _realm.Add(entity, false));
+            _realm.Add(entity, false);
         }
 
-        public T Update<T>(T entity) where T : IRealmObject
+        public void Update<T>(T entity) where T : IRealmObject
         {
-            return _realm.Write(() => _realm.Add(entity, true));
+            _realm.Add(entity, true);
         }
 
         public void Delete(IRealmObject entity)
         {
-            _realm.Write(() => _realm.Remove(entity));
+            _realm.Remove(entity);
+        }
+        public async Task<Transaction> BeginWriteAsync(CancellationToken cancellationToken = default)
+        {
+            return await _realm.BeginWriteAsync(cancellationToken);
         }
         #endregion
     }

@@ -16,14 +16,7 @@ namespace WordMaster.Data
     {
         static void Main(string[] args)
         {
-            IDataContext dataContext = new RealmDataContext();
-            IRepository<Word> wordRepository = new RealmRepository<Word>(dataContext);
-
-            wordRepository.Create(new Word
-            {
-                Id = Guid.NewGuid(),
-                Text = "Hello"
-            });
+            
         }
     }
 }

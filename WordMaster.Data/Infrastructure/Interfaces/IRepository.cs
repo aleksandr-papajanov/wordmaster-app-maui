@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WordMaster.Data.Infrastructure.Interfaces
 {
-    internal interface IRepository<T>
+    public interface IRepository<T>
         where T : IRealmObject
     {
         IQueryable<T> All { get; }
@@ -16,5 +16,6 @@ namespace WordMaster.Data.Infrastructure.Interfaces
         void Create(T entity);
         void Update(T entity);
         void Delete(T entity);
+        Task<Transaction> BeginWriteAsync(CancellationToken cancellationToken = default);
     }
 }
