@@ -27,7 +27,7 @@ namespace WordMaster.Data.DTOs.Mappers
                 Id = dto.Id,
                 Text = dto.Text,
                 Translation = dto.Translation,
-                Definition = dto.Definition
+                Definition = dto.Definition ?? string.Empty
             };
         }
     }

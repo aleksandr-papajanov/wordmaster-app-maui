@@ -24,15 +24,17 @@
                     <Button Text="Delete" FlexLayout.Basis="33%" Margin="1" Command="{Binding DeleteCommand}" />
                     <Button Text="Back" FlexLayout.Basis="33%" Margin="1" Clicked="Back_Clicked"  />
                 </FlexLayout>
-                
+
                 <Label Text="Word" />
                 <Entry Text="{Binding SelectedWord.Text}" Placeholder="Enter word" />
+                <Label x:Name="TextErrorLabel" TextColor="Red"  FontSize="10" IsVisible="{Binding HasTriedToUpdate}" />
 
                 <Label Text="Translation" />
                 <Entry Text="{Binding SelectedWord.Translation}" Placeholder="Enter translation" />
+                <Label x:Name="TranslationErrorLabel" TextColor="Red"  FontSize="10" IsVisible="{Binding HasTriedToUpdate}" />
 
                 <Label Text="Definition" />
-                <Editor Placeholder="Введите значение"
+                <Editor Placeholder="Enter definition"
                         HeightRequest="100"
                         Text="{Binding SelectedWord.Definition}" />
             </StackLayout>

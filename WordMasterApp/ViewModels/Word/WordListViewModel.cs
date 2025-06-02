@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ReactiveUI;
 using System.Collections.ObjectModel;
 using WordMaster.Data.DTOs;
 using WordMaster.Data.Infrastructure.Interfaces;
@@ -8,13 +9,18 @@ using WordMasterApp.Views;
 
 namespace WordMasterApp.ViewModels.Word
 {
-    public partial class WordListViewModel : ObservableObject//, IAsyncInitialize
+    public partial class WordListViewModel : ReactiveObject//, IAsyncInitialize
     {
         private readonly INavigationService _navigation;
         private readonly IWordService _wordService;
 
-        [ObservableProperty]
+        
         private ObservableCollection<WordDTO> _words = new();
+        public ObservableCollection<WordDTO> Words
+        {
+            get => _words;
+            set => this.RaiseAndSetIfChanged(ref _words, value);
+        }
 
         public WordListViewModel(INavigationService navigation, IWordService wordService)
         {

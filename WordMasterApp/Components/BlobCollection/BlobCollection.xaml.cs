@@ -18,13 +18,17 @@ public partial class BlobCollection : ContentView, IViewFor<BlobCollectionViewMo
     public static readonly BindableProperty ViewModelProperty =
         BindableProperty.Create(nameof(ViewModel), typeof(BlobCollectionViewModel), typeof(BlobCollection));
 
-    public BlobCollectionViewModel ViewModel
+    public BlobCollectionViewModel? ViewModel
     {
         get => (BlobCollectionViewModel)GetValue(ViewModelProperty);
         set
         {
             SetValue(ViewModelProperty, value);
-            OnViewModelSet();
+
+            if (value != null)
+            {
+                OnViewModelSet();
+            }
         }
     }
 

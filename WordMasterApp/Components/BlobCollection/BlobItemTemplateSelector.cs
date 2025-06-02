@@ -10,9 +10,8 @@ namespace WordMasterApp.Components
 {
     public class BlobItemTemplateSelector : DataTemplateSelector
     {
-        public DataTemplate RegularTemplate { get; set; }
-        public DataTemplate SelectedTemplate { get; set; }
-        public DataTemplate CreateTemplate { get; set; }
+        public required DataTemplate RegularTemplate { get; set; }
+        public required DataTemplate CreateTemplate { get; set; }
 
         protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
         {

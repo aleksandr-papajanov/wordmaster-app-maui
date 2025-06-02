@@ -12,7 +12,7 @@ namespace WordMaster.Data.Services
 {
     public class WordService : IWordService, IDisposable
     {
-        private IDisposable _realmSubscription;
+        private IDisposable? _cleanup;
 
         private readonly IRepository<Word> _wordRepository;
 
@@ -26,24 +26,23 @@ namespace WordMaster.Data.Services
         {
             _wordRepository = wordRepository;
 
-            _realmSubscription = _wordRepository.All
+            _cleanup = _wordRepository.All
                 .AsRealmCollection()
                 .SubscribeForNotifications(OnRealmNotified);
 
             FilterSubject.Subscribe(filterText =>
             {
-                _realmSubscription?.Dispose();
+                _cleanup?.Dispose();
 
                 var filteredWordsQuery = string.IsNullOrWhiteSpace(filterText)
                     ? _wordRepository.All
                     : _wordRepository.All
                         .Where(word => word.Text.Contains(filterText, StringComparison.OrdinalIgnoreCase) ||
-                               word.Translation.Contains(filterText, StringComparison.OrdinalIgnoreCase) ||
-                               word.Definition.Contains(filterText, StringComparison.OrdinalIgnoreCase));
+                                       word.Translation.Contains(filterText, StringComparison.OrdinalIgnoreCase));
 
                 var _realmCollection = filteredWordsQuery.AsRealmCollection();
 
-                _realmSubscription = _realmCollection.SubscribeForNotifications(OnRealmNotified);
+                _cleanup = _realmCollection.SubscribeForNotifications(OnRealmNotified);
 
                 var result = _realmCollection
                     .Select(word => word.ToDTO())
@@ -116,7 +115,7 @@ namespace WordMaster.Data.Services
             {
                 entity.Text = dto.Text;
                 entity.Translation = dto.Translation;
-                entity.Definition = dto.Definition;
+                entity.Definition = dto.Definition ?? string.Empty;
 
                 await trans.CommitAsync();
             }   
@@ -141,7 +140,7 @@ namespace WordMaster.Data.Services
 
         public void Dispose()
         {
-            _realmSubscription?.Dispose();
+            _cleanup?.Dispose();
             WordsSource.Dispose();
             FilterSubject.Dispose();
         }

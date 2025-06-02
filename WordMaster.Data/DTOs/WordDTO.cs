@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ReactiveUI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,11 +7,24 @@ using System.Threading.Tasks;
 
 namespace WordMaster.Data.DTOs
 {
-    public class WordDTO : IDisblayable
+    public class WordDTO : ReactiveObject, IDisblayable
     {
         public Guid Id { get; set; }
-        public string Text { get; set; } = string.Empty;
-        public string Translation { get; set; } = string.Empty;
+
+        private string _text = string.Empty;
+        public string Text
+        {
+            get => _text;
+            set => this.RaiseAndSetIfChanged(ref _text, value);
+        }
+
+        private string _translation = string.Empty;
+        public string Translation
+        {
+            get => _translation;
+            set => this.RaiseAndSetIfChanged(ref _translation, value);
+        }
+
         public string? Definition { get; set; }
     }
 }

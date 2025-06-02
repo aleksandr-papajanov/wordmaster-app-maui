@@ -65,6 +65,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
 		<PackageReference Include="ReactiveUI" Version="20.3.1" />
 		<PackageReference Include="ReactiveUI.Maui" Version="20.3.1" />
+		<PackageReference Include="ReactiveUI.Validation" Version="4.1.1" />
 		<PackageReference Include="System.Reactive" Version="6.0.1" />
 		<PackageReference Include="System.Reactive.Linq" Version="6.0.1" />
 	</ItemGroup>
@@ -75,6 +76,9 @@
 
 	<ItemGroup>
 	  <MauiXaml Update="Components\BlobCollection\BlobCollection.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Components\ValidationErrorPresenter\ValidationErrorPresenter.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\Word\WordListPage.xaml">
