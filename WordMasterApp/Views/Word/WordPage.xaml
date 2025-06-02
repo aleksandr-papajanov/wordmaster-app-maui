@@ -37,12 +37,26 @@
                         Text="{Binding SelectedWord.Definition}" />
             </StackLayout>
 
-            <components:BlobCollection Grid.Column="1"
-                                       ItemsSource="{Binding Words}"
-                                       SelectedItem="{Binding SelectedWord, Mode=TwoWay}">
+            <StackLayout Grid.Column="1">
+                <Entry x:Name="SearchEntry"
+                       Placeholder="Search words"
+                       Text="{Binding SearchText, Mode=TwoWay}"
+                       Margin="0,0,0,10" />
 
+                <Label>
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="Words in collection found: " />
+                            <Span Text="{Binding FoundCount}" FontAttributes="Bold" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
 
-            </components:BlobCollection>
+                <components:BlobCollection Grid.Column="1"
+                                           x:Name="BlobCollection" />
+            </StackLayout>
+
+            
         </Grid>
     </ScrollView>
 </local:BaseContentPage>

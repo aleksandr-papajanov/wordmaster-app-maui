@@ -1,177 +1,99 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using DynamicData;
+using DynamicData.Binding;
+using ReactiveUI;
+using ReactiveUI.Maui;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Windows.Input;
 using WordMaster.Data.DTOs;
 
 namespace WordMasterApp.Components;
 
-public partial class BlobCollection : ContentView
+public partial class BlobCollection : ContentView, IViewFor<BlobCollectionViewModel>
 {
-    // Observable collection of BlobCollectionItems for UI binding
-    private ObservableCollection<BlobCollectionItem<IDisblayable>> _blobItems = new();
-    public ObservableCollection<BlobCollectionItem<IDisblayable>> BlobItems
+    private readonly CompositeDisposable _disposables = new();
+
+    public static readonly BindableProperty ViewModelProperty =
+        BindableProperty.Create(nameof(ViewModel), typeof(BlobCollectionViewModel), typeof(BlobCollection));
+
+    public BlobCollectionViewModel ViewModel
     {
-        get => _blobItems;
+        get => (BlobCollectionViewModel)GetValue(ViewModelProperty);
         set
         {
-            if (_blobItems != value)
-            {
-                _blobItems = value;
-                OnPropertyChanged(nameof(BlobItems));
-            }
+            SetValue(ViewModelProperty, value);
+            OnViewModelSet();
         }
     }
 
-    // ItemsSource bindable property
-    public static readonly BindableProperty ItemsSourceProperty =
-        BindableProperty.Create(
-            nameof(ItemsSource),
-            typeof(ObservableCollection<IDisblayable>),
-            typeof(BlobCollection),
-            default,
-            propertyChanged: OnItemsSourceChanged);
-
-    public ObservableCollection<IDisblayable> ItemsSource
+    object? IViewFor.ViewModel
     {
-        get => (ObservableCollection<IDisblayable>)GetValue(ItemsSourceProperty);
-        set => SetValue(ItemsSourceProperty, value);
+        get => ViewModel;
+        set => ViewModel = (BlobCollectionViewModel)value!;
     }
 
-    private static void OnItemsSourceChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        if (bindable is not BlobCollection control)
-            return;
+    private ReadOnlyObservableCollection<BlobCollectionItem<IDisblayable>> _blobItems = null!;
+    public ReadOnlyObservableCollection<BlobCollectionItem<IDisblayable>> BlobItems => _blobItems;
 
-        if (newValue is not ObservableCollection<IDisblayable> newValueCollection)
-            return;
-
-        control.BlobItems.Clear();
-        foreach (var item in newValueCollection)
-        {
-            control.BlobItems.Add(new BlobCollectionItem<IDisblayable>(item));
-        }
-
-        newValueCollection.CollectionChanged += control.OnSourceCollectionChanged;
-    }
-
-    public void OnSourceCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (sender is not ObservableCollection<IDisblayable> source)
-            return;
-
-
-        if (e.Action == NotifyCollectionChangedAction.Add)
-        {
-            foreach (IDisblayable item in e.NewItems!)
-            {
-                var blob = new BlobCollectionItem<IDisblayable>(item);
-                blob.IsSelected = item.Id == SelectedItem?.Id;
-                BlobItems.Add(blob);
-            }
-        }
-
-        if (e.Action == NotifyCollectionChangedAction.Remove)
-        {
-            foreach (IDisblayable item in e.OldItems!)
-            {
-                var blob = BlobItems.FirstOrDefault(x => x.OriginalItem == item);
-
-                if (blob != null)
-                {
-                    if (blob.OriginalItem == SelectedItem)
-                    {
-                        SelectedItem = null;
-                    }
-
-                    BlobItems.Remove(blob);
-                }
-            }
-
-        }
-
-        if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            BlobItems.Clear();
-
-            foreach (IDisblayable item in source)
-            {
-                var blob = new BlobCollectionItem<IDisblayable>(item);
-                blob.IsSelected = item.Id == SelectedItem?.Id;
-                BlobItems.Add(blob);
-            }
-        }
-
-        if (e.Action == NotifyCollectionChangedAction.Replace)
-        {
-            foreach (IDisblayable oldItem in e.OldItems!)
-            {
-                var blob = BlobItems.FirstOrDefault(x => x.OriginalItem == oldItem);
-
-                if (blob != null)
-                {
-                    if (blob.OriginalItem == SelectedItem)
-                    {
-                        SelectedItem = null;
-                    }
-
-                    BlobItems.Remove(blob);
-                }
-            }
-
-            foreach (IDisblayable item in e.NewItems!)
-            {
-                var blob = new BlobCollectionItem<IDisblayable>(item);
-                blob.IsSelected = item.Id == SelectedItem?.Id;
-                BlobItems.Add(blob);
-            }
-        }
-
-        if (e.Action == NotifyCollectionChangedAction.Move)
-        {
-        }
-    }
-
-    // SelectedItem bindable property
-    public static readonly BindableProperty SelectedItemProperty =
-        BindableProperty.Create(
-            nameof(SelectedItem),
-            typeof(IDisblayable),
-            typeof(BlobCollection),
-            default,
-            propertyChanged: OnSelectedItemChanged);
-
-    public IDisblayable? SelectedItem
-    {
-        get => (IDisblayable)GetValue(SelectedItemProperty);
-        set => SetValue(SelectedItemProperty, value);
-    }
-
-    private static void OnSelectedItemChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        if (bindable is not BlobCollection control)
-            return;
-
-        if (control.ItemsSource is null)
-            return;
-
-        foreach (var item in control.BlobItems)
-        {
-            item.IsSelected = newValue is IDisblayable original && item.Id == original.Id;
-        }
-    }
-
-    // Command for selecting a blob item
     public ICommand SelectCommand { get; }
 
     public BlobCollection()
     {
         InitializeComponent();
-        SelectCommand = new Command<BlobCollectionItem<IDisblayable>>(OnSelect);
+        SelectCommand = ReactiveCommand.Create<BlobCollectionItem<IDisblayable>>(OnSelect);
+    }
+
+    public void OnViewModelSet()
+    {
+        _disposables.Clear();
+
+        if (ViewModel == null)
+            return;
+
+        ViewModel
+            .Connect()
+            .Transform(item =>
+            {
+                var blob = new BlobCollectionItem<IDisblayable>(item);
+                blob.IsSelected = item.Id == ViewModel.SelectedItemId;
+                return blob;
+            })
+            .AutoRefreshOnObservable(_ => ViewModel.WhenAnyValue(vm => vm.SelectedItemId))
+            .Do(changeSet =>
+            {
+                foreach (var item in _blobItems)
+                {
+                    item.IsSelected = item.OriginalItem.Id == ViewModel.SelectedItemId;
+                }
+            })
+            .Bind(out _blobItems)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ =>
+            {
+                this.OnPropertyChanged(nameof(BlobItems));
+            })
+            .DisposeWith(_disposables);
     }
 
     private void OnSelect(BlobCollectionItem<IDisblayable> item)
     {
-        SelectedItem = item.OriginalItem;
+        ViewModel!.SelectedItemId = item.Id;
+    }
+
+    protected override void OnBindingContextChanged()
+    {
+        base.OnBindingContextChanged();
+        _disposables.Clear();
+    }
+
+    protected override void OnParentSet()
+    {
+        base.OnParentSet();
+        if (Parent == null)
+        {
+            _disposables.Dispose();
+        }
     }
 }

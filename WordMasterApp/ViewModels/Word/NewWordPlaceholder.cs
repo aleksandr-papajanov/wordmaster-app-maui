@@ -2,8 +2,10 @@
 
 namespace WordMasterApp.ViewModels.Word
 {
-    public class NewWordPlaceholder : WordDTO
+    public class NewWordPlaceholder : IDisblayable
     {
+        public Guid Id { get; } = Guid.NewGuid();
+        public string Text { get; } = "New Word";
     }
 }
 

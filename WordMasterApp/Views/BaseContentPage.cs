@@ -11,6 +11,10 @@ namespace WordMasterApp.Views
     {
         private bool _isInitialized = false;
 
+        protected BaseContentPage()
+        {
+        }
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();

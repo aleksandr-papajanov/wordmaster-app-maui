@@ -16,6 +16,6 @@
     <ShellContent
         Title="About Page"
         Route="about"
-        ContentTemplate="{DataTemplate v:WordListPage}"/>
+        ContentTemplate="{DataTemplate v:WordPage}"/>
 
 </Shell>

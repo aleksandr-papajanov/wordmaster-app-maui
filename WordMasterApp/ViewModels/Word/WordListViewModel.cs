@@ -21,15 +21,15 @@ namespace WordMasterApp.ViewModels.Word
             _navigation = navigation;
             _wordService = wordService;
 
-            _wordService.Words.Subscribe(words =>
-            {
-                Words.Clear();
+            //_wordService.Words.Subscribe(words =>
+            //{
+            //    Words.Clear();
 
-                foreach (var word in words)
-                {
-                    Words.Add(word);
-                }
-            });
+            //    foreach (var word in words)
+            //    {
+            //        Words.Add(word);
+            //    }
+            //});
         }
 
         [RelayCommand]

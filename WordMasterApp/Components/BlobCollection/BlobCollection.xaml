@@ -1,60 +1,59 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"  
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"  
-             xmlns:local="clr-namespace:WordMasterApp.Components"  
-             x:Class="WordMasterApp.Components.BlobCollection"  
-             x:Name="Root">  
+             xmlns:reactiveui="clr-namespace:ReactiveUI.Maui;assembly=ReactiveUI.Maui"
+             xmlns:components="clr-namespace:WordMasterApp.Components"  
+             x:Class="WordMasterApp.Components.BlobCollection"
+             x:Name="Root">
     <ContentView.Resources>  
         <ResourceDictionary>  
-            <DataTemplate x:Key="RegularTemplate">
-                <Frame Padding="10" Margin="2" CornerRadius="10">
-                    <Label Text="{Binding Text}" />
+            <DataTemplate x:Key="RegularTemplate">  
+                <Frame Padding="10" Margin="2" CornerRadius="10">  
+                    <Label Text="{Binding Text}" />  
 
                     <Frame.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding SelectCommand, Source={x:Reference Root}}"
+                        <TapGestureRecognizer Command="{Binding SelectCommand, Source={x:Reference Root}}"  
                                               CommandParameter="{Binding .}" />
-                    </Frame.GestureRecognizers>
+                    </Frame.GestureRecognizers>  
 
-                    <Frame.Triggers>
-                        <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">
-                            <Setter Property="BackgroundColor" Value="Blue"/>
-                        </DataTrigger>
-                    </Frame.Triggers>
-                </Frame>
-            </DataTemplate>
+                    <Frame.Triggers>  
+                        <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">  
+                            <Setter Property="BackgroundColor" Value="Blue"/>  
+                        </DataTrigger>  
+                    </Frame.Triggers>  
+                </Frame>  
+            </DataTemplate>  
 
-            <DataTemplate x:Key="CreateTemplate">
-                <Frame Padding="10" Margin="2" CornerRadius="10">
-                    <Label Text="Create new" />
+            <DataTemplate x:Key="CreateTemplate">  
+                <Frame Padding="10" Margin="2" CornerRadius="10">  
+                    <Label Text="Create new" />  
 
                     <Frame.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding SelectCommand, Source={x:Reference Root}}"
+                        <TapGestureRecognizer Command="{Binding SelectCommand, Source={x:Reference Root}}"  
                                               CommandParameter="{Binding .}" />
-                    </Frame.GestureRecognizers>
+                    </Frame.GestureRecognizers>  
 
-                    <Frame.Triggers>
-                        <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">
-                            <Setter Property="BackgroundColor" Value="Red"/>
-                        </DataTrigger>
-                    </Frame.Triggers>
-                </Frame>
-            </DataTemplate>
-        </ResourceDictionary>  
+                    <Frame.Triggers>  
+                        <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">  
+                            <Setter Property="BackgroundColor" Value="Red"/>  
+                        </DataTrigger>  
+                    </Frame.Triggers>  
+                </Frame>  
+            </DataTemplate>  
+        </ResourceDictionary>
     </ContentView.Resources>  
-    
+
     <VerticalStackLayout>  
         <FlexLayout Direction="Row"  
                     Wrap="Wrap"  
                     JustifyContent="Start"  
                     AlignItems="Start"  
                     Margin="10"  
-                    BindableLayout.ItemsSource="{Binding BlobItems, Source={x:Reference Root}}">
+                    BindableLayout.ItemsSource="{Binding BlobItems, Source={x:Reference Root}}">  
             <BindableLayout.ItemTemplateSelector>
-                <local:BlobItemTemplateSelector RegularTemplate="{StaticResource RegularTemplate}"  
-                                                CreateTemplate="{StaticResource CreateTemplate}" />
-            </BindableLayout.ItemTemplateSelector>
-
-            
+                <components:BlobItemTemplateSelector RegularTemplate="{StaticResource RegularTemplate}"  
+                                                     CreateTemplate="{StaticResource CreateTemplate}" />  
+            </BindableLayout.ItemTemplateSelector>  
         </FlexLayout>  
     </VerticalStackLayout>  
 </ContentView>

@@ -1,38 +1,85 @@
-﻿using Realms;
-using System;
-using System.Diagnostics;
+﻿using DynamicData;
+using Realms;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
 using WordMaster.Data.DTOs;
 using WordMaster.Data.DTOs.Mappers;
-using WordMaster.Data.Infrastructure;
 using WordMaster.Data.Infrastructure.Interfaces;
 using WordMaster.Data.Models;
 
 namespace WordMaster.Data.Services
 {
-    public class WordService : IWordService
+    public class WordService : IWordService, IDisposable
     {
-        private readonly IRepository<Word> _wordRepository;
-        private readonly BehaviorSubject<IList<WordDTO>> _words = new([]);
-        private IRealmCollection<Word> _realmWords;
+        private IDisposable _realmSubscription;
 
-        public IObservable<IList<WordDTO>> Words => _words.AsObservable();
+        private readonly IRepository<Word> _wordRepository;
+
+        public SourceList<WordDTO> WordsSource { get; } = new();
+
+        public BehaviorSubject<string> FilterSubject { get; } = new(string.Empty);
+
+        
 
         public WordService(IRepository<Word> wordRepository)
         {
             _wordRepository = wordRepository;
 
-            _realmWords = _wordRepository.All.AsRealmCollection();
+            _realmSubscription = _wordRepository.All
+                .AsRealmCollection()
+                .SubscribeForNotifications(OnRealmNotified);
 
-            // publish of initial data
-            _words.OnNext(_realmWords.Select(w => w.ToDTO()).ToList());
-
-            // subscribe to changes in the Realm collection
-            _realmWords.SubscribeForNotifications((sender, changes) =>
+            FilterSubject.Subscribe(filterText =>
             {
-                _words.OnNext(_realmWords.Select(w => w.ToDTO()).ToList());
+                _realmSubscription?.Dispose();
+
+                var filteredWordsQuery = string.IsNullOrWhiteSpace(filterText)
+                    ? _wordRepository.All
+                    : _wordRepository.All
+                        .Where(word => word.Text.Contains(filterText, StringComparison.OrdinalIgnoreCase) ||
+                               word.Translation.Contains(filterText, StringComparison.OrdinalIgnoreCase) ||
+                               word.Definition.Contains(filterText, StringComparison.OrdinalIgnoreCase));
+
+                var _realmCollection = filteredWordsQuery.AsRealmCollection();
+
+                _realmSubscription = _realmCollection.SubscribeForNotifications(OnRealmNotified);
+
+                var result = _realmCollection
+                    .Select(word => word.ToDTO())
+                    .ToList();
+
+                WordsSource.Edit(list =>
+                {
+                    list.Clear();
+                    list.AddRange(result);
+                });
+            });
+        }
+
+        private void OnRealmNotified(IRealmCollection<Word> sender, ChangeSet? changes)
+        {
+            if (changes == null)
+            {
+                return;
+            }
+
+            WordsSource.Edit(sourceList =>
+            {
+                foreach (var index in changes.DeletedIndices)
+                {
+                    sourceList.RemoveAt(index);
+                }
+
+                foreach (var index in changes.ModifiedIndices)
+                {
+                    sourceList[index] = sender[index].ToDTO();
+                }
+
+                foreach (var index in changes.InsertedIndices)
+                {
+                    sourceList.Insert(index, sender[index].ToDTO());
+                }
             });
         }
 
@@ -90,6 +137,13 @@ namespace WordMaster.Data.Services
 
                 await trans.CommitAsync();
             }
+        }
+
+        public void Dispose()
+        {
+            _realmSubscription?.Dispose();
+            WordsSource.Dispose();
+            FilterSubject.Dispose();
         }
     }
 }

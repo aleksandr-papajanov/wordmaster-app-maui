@@ -1,98 +1,133 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
+﻿using DynamicData;
+using DynamicData.Binding;
+using ReactiveUI;
+using System.Diagnostics.CodeAnalysis;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using WordMaster.Data.DTOs;
 using WordMaster.Data.Infrastructure.Interfaces;
-using WordMaster.Data.Models;
 using WordMasterApp.Components;
-
-using WordMasterApp.Infrastructure.Interfaces;
 
 namespace WordMasterApp.ViewModels.Word
 {
-    public partial class WordViewModel : ObservableObject, IQueryAttributable
+    public partial class WordViewModel : ReactiveObject, IDisposable
     {
-        private readonly INavigationService _navigation;
         private readonly IWordService _wordService;
-        private ObservableCollection<IDisblayable> _words = new();
-        private IDisblayable? _selectedWord;
+        private readonly CompositeDisposable _disposables = new();
+        private readonly SourceList<IDisblayable> _staticItems = new();
 
-        public ObservableCollection<IDisblayable> Words
+        private string _searchText = string.Empty;
+        public string SearchText
         {
-            get => _words;
-            set => SetProperty(ref _words, value);
+            get => _searchText;
+            set => this.RaiseAndSetIfChanged(ref _searchText, value);
         }
 
-        public IDisblayable? SelectedWord
+        private WordDTO? _selectedWord;
+        public WordDTO? SelectedWord
         {
             get => _selectedWord;
-            set
-            {
-                SetProperty(ref _selectedWord, value);
-
-                UpdateCommand.NotifyCanExecuteChanged();
-                DeleteCommand.NotifyCanExecuteChanged();
-            }
+            set => this.RaiseAndSetIfChanged(ref _selectedWord, value);
         }
 
-        private bool CanUpdate => SelectedWord is WordDTO;
-        private bool CanDelete => SelectedWord != null && SelectedWord is not NewWordPlaceholder;
+        private readonly ObservableAsPropertyHelper<int> _foundCount;
+        public int FoundCount => _foundCount.Value;
 
+        public ReactiveCommand<Unit, Unit> UpdateCommand { get; }
+        public ReactiveCommand<Unit, Unit> DeleteCommand { get; }
 
-        public WordViewModel(INavigationService navigation, IWordService wordService)
+        public BlobCollectionViewModel WordBlobsViewModel { get; } = new();
+
+        public WordViewModel(IWordService wordService)
         {
-            _navigation = navigation;
             _wordService = wordService;
 
-            _wordService.Words.Subscribe(words =>
-            {
-                Words.Clear();
-                Words.Add(new NewWordPlaceholder());
+            // Add static placeholder item
+            _staticItems.Add(new NewWordPlaceholder());
 
-                foreach (var word in words)
+            // Setup commands
+            var canUpdate = WordBlobsViewModel.WhenAnyValue(vm => vm.SelectedItemId, (Guid? id) => id != null);
+            UpdateCommand = ReactiveCommand.CreateFromTask(UpdateWordAsync, canUpdate);
+
+            var canDelete = WordBlobsViewModel.WhenAnyValue(vm => vm.SelectedItemId, (Guid? id) => id != null);
+            DeleteCommand = ReactiveCommand.CreateFromTask(DeleteWordAsync, canDelete);
+
+            // Setup main collection pipeline
+            _wordService.WordsSource
+                .Connect()
+                .Transform(word => word as IDisblayable)
+                .MergeChangeSets(_staticItems.Connect())
+                .Sort(SortExpressionComparer<IDisblayable>
+                    .Ascending(x => x is NewWordPlaceholder ? 0 : 1))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Bind(out var items)
+                .DisposeMany()
+                .Subscribe()
+                .DisposeWith(_disposables);
+
+            WordBlobsViewModel.Items = items;
+
+            // Keep FoundCount in sync (excluding placeholder)
+            WordBlobsViewModel
+                .Connect()
+                .ToCollection()
+                .Select(list => list.Count(x => x is not NewWordPlaceholder))
+                .ToProperty(this, x => x.FoundCount, out _foundCount)
+                .DisposeWith(_disposables);
+
+            // Search text filter
+            this.WhenAnyValue(vm => vm.SearchText)
+                .Throttle(TimeSpan.FromMilliseconds(200))
+                .Select(text => text?.Trim() ?? string.Empty)
+                .DistinctUntilChanged()
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(filterString => _wordService.FilterSubject.OnNext(filterString))
+                .DisposeWith(_disposables);
+
+            // Selection logic
+            WordBlobsViewModel
+                .WhenAnyValue(vm => vm.SelectedItemId)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(id =>
                 {
-                    Words.Add(word);
-                }
-            });
+                    var found = items.FirstOrDefault(w => w.Id == id);
+                    SelectedWord = found is NewWordPlaceholder
+                        ? new WordDTO()
+                        : found as WordDTO;
+                })
+                .DisposeWith(_disposables);
         }
 
 
-        [RelayCommand(CanExecute = nameof(CanUpdate))]
-        private async Task UpdateAsync()
+        private async Task UpdateWordAsync()
         {
-            if (SelectedWord is NewWordPlaceholder placeholder)
+            if (SelectedWord == null)
+                return;
+
+            if (SelectedWord.Id == Guid.Empty)
             {
-                var created = await _wordService.CreateAsync(placeholder);
-                SelectedWord = created;
+                await _wordService.CreateAsync(SelectedWord);
+                SelectedWord = new WordDTO();
             }
-            else if (SelectedWord is WordDTO word)
+            else
             {
-                await _wordService.UpdateAsync(word);
+                await _wordService.UpdateAsync(SelectedWord);
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanDelete))]
-        private async Task DeleteAsync()
+        private async Task DeleteWordAsync()
         {
-            if (SelectedWord is WordDTO word && word.Id != Guid.Empty)
-            {
-                await _wordService.DeleteAsync(word.Id);
+            if (SelectedWord == null)
+                return;
 
-                SelectedWord = null;
-            }
+            await _wordService.DeleteAsync(SelectedWord.Id);
+            WordBlobsViewModel.SelectedItemId = null;
         }
 
-        public void ApplyQueryAttributes(IDictionary<string, object> query)
+        public void Dispose()
         {
-            if (query.TryGetValue("id", out var raw) && Guid.TryParse(raw?.ToString(), out var id))
-            {
-                var word = _words.FirstOrDefault(w => w.Id == id);
-
-                if (word != null)
-                {
-                    SelectedWord = word;
-                }
-            }
+            _disposables.Dispose();
         }
     }
 }
