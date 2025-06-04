@@ -78,15 +78,21 @@
 	  <MauiXaml Update="Components\BlobCollection\BlobCollection.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Components\ValidationErrorPresenter\ValidationErrorPresenter.xaml">
+	  <MauiXaml Update="Features\WordUsage\WordUsageView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\Word\WordListPage.xaml">
+	  <MauiXaml Update="Features\WordDetails\WordDetailsPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\Word\WordPage.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Features\WordDetails\WordDetailsPage.xaml.cs">
+	    <DependentUpon>WordDetailsPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Features\WordUsage\WordUsageView.xaml.cs">
+	    <DependentUpon>WordUsageView.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WordMaster.Data.DTOs;
-using WordMasterApp.ViewModels.Word;
+﻿using WordMasterApp.Features;
 
-namespace WordMasterApp.Components
+namespace WordMasterApp.Components.BlobCollection
 {
     public class BlobItemTemplateSelector : DataTemplateSelector
     {
@@ -15,7 +9,7 @@ namespace WordMasterApp.Components
 
         protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
         {
-            if (item is BlobCollectionItem<IDisblayable> blob && blob.OriginalItem is NewWordPlaceholder)
+            if (item is BlobCollectionItem<IBlobCollectionDisplayable> blob && blob.OriginalItem is NewWordPlaceholder)
             {
                 return CreateTemplate;
             }

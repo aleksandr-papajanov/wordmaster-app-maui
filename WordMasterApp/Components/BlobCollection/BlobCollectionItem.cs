@@ -1,16 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WordMaster.Data.DTOs;
+﻿using ReactiveUI;
 
-namespace WordMasterApp.Components
+namespace WordMasterApp.Components.BlobCollection
 {
     public partial class BlobCollectionItem<T> : ReactiveObject
-        where T : IDisblayable
+        where T : IBlobCollectionDisplayable
     {
         private string _text = string.Empty;
         public string Text
@@ -27,7 +20,7 @@ namespace WordMasterApp.Components
         }
 
         public Guid Id { get; }
-        public IDisblayable OriginalItem { get; }
+        public T OriginalItem { get; }
 
         public BlobCollectionItem(T item)
         {

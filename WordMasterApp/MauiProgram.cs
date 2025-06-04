@@ -1,13 +1,9 @@
 ﻿using CommunityToolkit.Maui;
-using CommunityToolkit.Maui.Layouts;
 using Microsoft.Extensions.Logging;
 using WordMaster.Data.Infrastructure;
-using WordMaster.Data.Infrastructure.Interfaces;
 using WordMaster.Data.Services;
-using WordMasterApp.Infrastructure.Interfaces;
-using WordMasterApp.Services;
-using WordMasterApp.ViewModels.Word;
-using WordMasterApp.Views;
+using WordMasterApp.Features;
+using WordMasterApp.Infrastructure;
 
 namespace WordMasterApp
 {
@@ -19,16 +15,19 @@ namespace WordMasterApp
 
             builder.Services.AddTransient<IDataContext, RealmDataContext>();
             builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-            builder.Services.AddTransient<IWordService, WordService>();
-            
-            builder.Services.AddSingleton<INavigationService, NavigationService>();
+            builder.Services.AddSingleton<IWordService, WordService>();
+            builder.Services.AddSingleton<IWordUsageService, WordUsageService>();
 
-            builder.Services.AddTransient<WordListViewModel>();
-            builder.Services.AddTransient<WordListPage>();
+            builder.Services.AddTransient<IWordUsageViewModelFactory, WordUsageViewModelFactory>();
+            builder.Services.AddTransient<IWordViewModelFactory, WordViewModelFactory>();
+            builder.Services.AddTransient<IBlobCollectionViewModelFactory, BlobCollectionViewModelFactory>();
 
-            builder.Services.AddTransient<WordViewModel>();
-            builder.Services.AddTransient<WordPage>();
-            
+            builder.Services.AddTransient<WordDetailsPage>();
+            builder.Services.AddTransient<WordDetailsViewModel>();
+
+            builder.Services.AddTransient<WordUsageView>();
+            builder.Services.AddTransient<WordUsageViewModel>();
+
             builder
                 .UseMauiApp<App>()
                 .UseMauiCommunityToolkit()

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WordMaster.Data.Exceptions;
-using WordMaster.Data.Infrastructure.Interfaces;
 using WordMaster.Data.Models;
 
 namespace WordMaster.Data.Infrastructure
@@ -24,14 +23,15 @@ namespace WordMaster.Data.Infrastructure
 
             var config = new RealmConfiguration(_dbPath)
             {
-                SchemaVersion = 3,
+                SchemaVersion = 9,
                 MigrationCallback = (_, _) => { },
                 IsReadOnly = false, // Opens for change or creates a writable file if it doesn't exist
                 Schema = new[]
                 {
                     typeof(Language),
                     typeof(Deck),
-                    typeof(Word)
+                    typeof(Word),
+                    typeof(WordUsage)
                 }
             };
 

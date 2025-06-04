@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WordMaster.Data.Infrastructure.Interfaces
+namespace WordMaster.Data.Infrastructure
 {
     public interface IRepository<T>
         where T : IRealmObject

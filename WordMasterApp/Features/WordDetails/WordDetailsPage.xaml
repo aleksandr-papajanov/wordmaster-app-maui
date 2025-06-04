@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<local:BaseContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:WordMasterApp.Views"
-             xmlns:components="clr-namespace:WordMasterApp.Components"
-             x:Class="WordMasterApp.Views.WordPage"
+             xmlns:local="clr-namespace:WordMasterApp.Features"
+             xmlns:blob="clr-namespace:WordMasterApp.Components.BlobCollection"
+             x:Class="WordMasterApp.Features.WordDetailsPage"
              x:Name="RootPage"
              Title="WordPage">
 
@@ -37,6 +37,8 @@
                 <Editor Placeholder="Enter definition"
                         HeightRequest="100"
                         Text="{Binding SelectedWord.Definition}" />
+
+                <local:WordUsageView ViewModel="{Binding WordUsageVM}" />
             </StackLayout>
 
             <StackLayout Grid.Column="1">
@@ -54,11 +56,12 @@
                     </Label.FormattedText>
                 </Label>
 
-                <components:BlobCollection Grid.Column="1"
-                                           x:Name="BlobCollection" />
+                <blob:BlobCollection Grid.Column="1"
+                                     x:Name="BlobCollection"
+                                     ViewModel="{Binding WordBlobsVM}" />
             </StackLayout>
 
             
         </Grid>
     </ScrollView>
-</local:BaseContentPage>
+</ContentPage>

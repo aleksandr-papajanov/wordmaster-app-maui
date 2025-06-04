@@ -1,4 +1,4 @@
-﻿using WordMasterApp.Views;
+﻿using WordMasterApp.Features;
 
 namespace WordMasterApp
 {
@@ -8,8 +8,7 @@ namespace WordMasterApp
         {
             InitializeComponent();
 
-            Routing.RegisterRoute(nameof(WordListPage), typeof(WordListPage));
-            Routing.RegisterRoute(nameof(WordPage), typeof(WordPage));
+            Routing.RegisterRoute(nameof(WordDetailsPage), typeof(WordDetailsPage));
         }
     }
 }
