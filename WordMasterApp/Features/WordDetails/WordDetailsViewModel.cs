@@ -11,6 +11,7 @@ using System.Reactive.Subjects;
 using WordMaster.Data.Services;
 using WordMaster.Data.ViewModels;
 using WordMasterApp.Components.BlobCollection;
+using WordMasterApp.DIFactories;
 using WordMasterApp.Infrastructure;
 
 namespace WordMasterApp.Features
@@ -75,7 +76,9 @@ namespace WordMasterApp.Features
             WordBlobsVM = blobCollectionViewModelFactory.Create(_wordsSubject);
             WordUsageVM = wordUsageFactory.Create(
                 this.WhenAnyValue(vm => vm.SelectedWord)
-                    .WhereNotNull());
+                    .WhereNotNull()
+                    .Where(x => x.IsManaged)
+                    .Select(x => x.Id));
 
             // Add static placeholder item
             _staticItems.Add(new NewWordPlaceholder());

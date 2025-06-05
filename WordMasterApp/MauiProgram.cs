@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using WordMaster.Data.Infrastructure;
 using WordMaster.Data.Services;
+using WordMasterApp.DIFactories;
 using WordMasterApp.Features;
 using WordMasterApp.Infrastructure;
 
@@ -16,7 +17,7 @@ namespace WordMasterApp
             builder.Services.AddTransient<IDataContext, RealmDataContext>();
             builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
             builder.Services.AddSingleton<IWordService, WordService>();
-            builder.Services.AddSingleton<IWordUsageService, WordUsageService>();
+            builder.Services.AddSingleton<IWordUsageService, WordUsageService1>();
 
             builder.Services.AddTransient<IWordUsageViewModelFactory, WordUsageViewModelFactory>();
             builder.Services.AddTransient<IWordViewModelFactory, WordViewModelFactory>();
@@ -38,7 +39,7 @@ namespace WordMasterApp
                 });
 
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
             return builder.Build();

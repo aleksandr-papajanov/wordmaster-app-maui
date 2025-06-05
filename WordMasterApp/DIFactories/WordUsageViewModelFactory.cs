@@ -2,11 +2,11 @@
 using WordMaster.Data.ViewModels;
 using WordMasterApp.Features;
 
-namespace WordMasterApp.Infrastructure
+namespace WordMasterApp.DIFactories
 {
     public interface IWordUsageViewModelFactory
     {
-        WordUsageViewModel Create(IObservable<WordViewModel> stream);
+        WordUsageViewModel Create(IObservable<Guid> wordId);
     }
 
     public class WordUsageViewModelFactory : IWordUsageViewModelFactory
@@ -18,9 +18,9 @@ namespace WordMasterApp.Infrastructure
             _service = service;
         }
 
-        public WordUsageViewModel Create(IObservable<WordViewModel> stream)
+        public WordUsageViewModel Create(IObservable<Guid> wordId)
         {
-            return new WordUsageViewModel(stream, _service);
+            return new WordUsageViewModel(wordId, _service);
         }
     }
 }
