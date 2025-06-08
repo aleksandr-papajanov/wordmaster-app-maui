@@ -2,15 +2,14 @@
 using System.Reactive.Subjects;
 using WordMasterApp.Components.BlobCollection;
 
-namespace WordMasterApp.Infrastructure
+namespace WordMasterApp.DIFactories
 {
-    // Renamed the class to avoid conflict with the existing definition
-    public interface IBlobCollectionViewModelFactory
+    public interface IBlobCollectionViewModelDIFactory
     {
         BlobCollectionViewModel Create(ISubject<IObservable<IChangeSet<IBlobCollectionDisplayable>>> stream);
     }
 
-    public class BlobCollectionViewModelFactory : IBlobCollectionViewModelFactory
+    public class BlobCollectionViewModelDIFactory : IBlobCollectionViewModelDIFactory
     {
         public BlobCollectionViewModel Create(ISubject<IObservable<IChangeSet<IBlobCollectionDisplayable>>> stream) =>
             new BlobCollectionViewModel(stream);

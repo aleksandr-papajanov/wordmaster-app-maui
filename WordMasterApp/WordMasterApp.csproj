@@ -78,6 +78,12 @@
 	  <MauiXaml Update="Components\BlobCollection\BlobCollection.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Components\Header\Header.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Components\ValidationEntry\ValidationWrapper.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Features\WordUsage\WordUsageView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
@@ -87,12 +93,30 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Components\Header\Header.xaml.cs">
+	    <DependentUpon>Header.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Components\ValidationEntry\ValidationWrapper.xaml.cs">
+	    <DependentUpon>ValidationWrapper.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Features\WordDetails\WordDetailsPage.xaml.cs">
 	    <DependentUpon>WordDetailsPage.xaml</DependentUpon>
 	  </Compile>
 	  <Compile Update="Features\WordUsage\WordUsageView.xaml.cs">
 	    <DependentUpon>WordUsageView.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Properties\Resources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Properties\Resources.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
 	</ItemGroup>
 
 </Project>

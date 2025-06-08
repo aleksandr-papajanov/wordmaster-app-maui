@@ -1,4 +1,5 @@
 ﻿using DynamicData;
+using DynamicData.Binding;
 using Realms;
 using System;
 using System.Reactive.Disposables;
@@ -9,55 +10,36 @@ using WordMaster.Data.Models;
 
 namespace WordMaster.Data.Services
 {
-    public class WordService : IWordService, IDisposable
+    public class WordUsageService : IWordUsageService
     {
-        private readonly CompositeDisposable _disposables = new();
-        private IDisposable? _realmSubscription;
+        private readonly IRepository<WordUsage> _repository;
 
-        private readonly IRepository<Word> _repository;
-        private readonly SourceList<Word> _source = new();
-
-        public IObservable<IChangeSet<Word>> Words => _source.Connect();
-
-        public BehaviorSubject<string> FilterSubject { get; } = new(string.Empty);
-
-        public WordService(IRepository<Word> repository)
+        public WordUsageService(IRepository<WordUsage> repository)
         {
             _repository = repository;
-
-            FilterSubject
-                .DistinctUntilChanged()
-                .Subscribe(UpdateFilteredWords)
-                .DisposeWith(_disposables);
         }
-
-        private void UpdateFilteredWords(string filter)
+        
+        public IObservable<IChangeSet<WordUsage>> GetStream(IObservable<Word> word, IObservable<string> filter)
         {
-            _realmSubscription?.Dispose();
+            return word
+                .CombineLatest(filter, (word, filter) => (word, filter))
+                .Select(args =>
+                {
+                     var (word, filter) = args;
 
-            var filteredWordsQuery = string.IsNullOrWhiteSpace(filter)
-                ? _repository.All
-                : _repository.All
-                    .Where(word => word.Text.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-                                   word.Translation.Contains(filter, StringComparison.OrdinalIgnoreCase));
+                     var filteredWordsQuery = _repository.All
+                         .Where(e => e.WordId == word.Id)
+                         .Where(e => e.Text.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                                     e.Translation.Contains(filter, StringComparison.OrdinalIgnoreCase));
 
-
-            var collection = filteredWordsQuery.AsRealmCollection();
-            _realmSubscription = collection.BindToSourceList(_source);
-
-            _source.Edit(list =>
-            {
-                list.Clear();
-                list.AddRange(collection.ToList());
-            });
+                     return filteredWordsQuery
+                        .AsRealmCollection()
+                        .ToObservableChangeSet<IRealmCollection<WordUsage>, WordUsage>();
+                })
+                .Switch();
         }
 
-        public Word? Find(Guid id)
-        {
-            return _repository.Find(id);
-        }
-
-        public async Task CreateAsync(Word entity)
+        public async Task CreateAsync(WordUsage entity)
         {
             entity.Id = Guid.NewGuid(); // Ensure a new ID is generated for the new word
 
@@ -72,7 +54,7 @@ namespace WordMaster.Data.Services
             }
         }
 
-        public async Task UpdateAsync(Word entity, Action<Word> updater)
+        public async Task UpdateAsync(WordUsage entity, Action<WordUsage> updater)
         {
             using (var trans = await _repository.BeginWriteAsync())
             {
@@ -86,7 +68,7 @@ namespace WordMaster.Data.Services
             }
         }
 
-        public async Task DeleteAsync(Word entity)
+        public async Task DeleteAsync(WordUsage entity)
         {
             using (var trans = await _repository.BeginWriteAsync())
             {
@@ -94,12 +76,6 @@ namespace WordMaster.Data.Services
 
                 await trans.CommitAsync();
             }
-        }
-
-        public void Dispose()
-        {
-            _disposables.Dispose();
-            _realmSubscription?.Dispose();
         }
     }
 }

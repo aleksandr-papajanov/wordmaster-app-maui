@@ -4,18 +4,18 @@ using System.Reactive.Disposables;
 
 namespace WordMasterApp.Features;
 
-public partial class WordDetailsPage : ContentPage, IViewFor<WordDetailsViewModel>
+public partial class WordDetailsPage : ContentPage, IViewFor<WordDetailsPageViewModel>
 {
     public static readonly BindableProperty ViewModelProperty =
-        BindableProperty.Create(nameof(ViewModel), typeof(WordDetailsViewModel), typeof(WordDetailsPage),
+        BindableProperty.Create(nameof(ViewModel), typeof(WordDetailsPageViewModel), typeof(WordDetailsPage),
             propertyChanged: (bindable, _, value) =>
             {
             });
 
     // Implementation of IViewFor<>.ViewModel
-    public WordDetailsViewModel? ViewModel
+    public WordDetailsPageViewModel? ViewModel
     {
-        get => BindingContext as WordDetailsViewModel ?? null;
+        get => BindingContext as WordDetailsPageViewModel ?? null;
         set => BindingContext = value;
     }
 
@@ -23,11 +23,11 @@ public partial class WordDetailsPage : ContentPage, IViewFor<WordDetailsViewMode
     object? IViewFor.ViewModel
     {
         get => ViewModel;
-        set => ViewModel = value as WordDetailsViewModel;
+        set => ViewModel = value as WordDetailsPageViewModel;
     }
 
 
-    public WordDetailsPage(WordDetailsViewModel viewModel)
+    public WordDetailsPage(WordDetailsPageViewModel viewModel)
     {
         InitializeComponent();
         ViewModel = viewModel;

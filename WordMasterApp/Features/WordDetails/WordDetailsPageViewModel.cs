@@ -11,14 +11,14 @@ using System.Reactive.Subjects;
 using WordMaster.Data.Services;
 using WordMaster.Data.ViewModels;
 using WordMasterApp.Components.BlobCollection;
-using WordMasterApp.Infrastructure;
+using WordMasterApp.DIFactories;
 
 namespace WordMasterApp.Features
 {
-    public partial class WordDetailsViewModel : ReactiveObject, IActivatableViewModel, IValidatableViewModel
+    public partial class WordDetailsPageViewModel : ReactiveObject, IActivatableViewModel, IValidatableViewModel
     {
         private readonly IWordService _wordService;
-        private readonly IWordViewModelFactory _wordViewModelFactory;
+        private readonly IWordWrapperViewModelDIFactory _wordWrapperFactory;
         private readonly SourceList<IBlobCollectionDisplayable> _staticItems = new();
         private readonly ReplaySubject<IObservable<IChangeSet<IBlobCollectionDisplayable>>> _wordsSubject = new();
 
@@ -31,8 +31,8 @@ namespace WordMasterApp.Features
         }
 
         // Binded to the UI entry fields
-        private WordViewModel? _selectedWord;
-        public WordViewModel? SelectedWord
+        private WordWrapperViewModel? _selectedWord;
+        public WordWrapperViewModel? SelectedWord
         {
             get => _selectedWord;
             private set => this.RaiseAndSetIfChanged(ref _selectedWord, value);
@@ -53,7 +53,7 @@ namespace WordMasterApp.Features
        
         // ViewModels for Blobs and Usage
         public BlobCollectionViewModel WordBlobsVM { get; }
-        public WordUsageViewModel WordUsageVM { get; }
+        public WordUsageViewViewModel WordUsageViewVM { get; }
 
         // Commands
         public ReactiveCommand<Unit, Unit> UpdateCommand { get; }
@@ -61,21 +61,22 @@ namespace WordMasterApp.Features
 
 
 
-        public WordDetailsViewModel(IWordService wordService,
-                                    IBlobCollectionViewModelFactory blobCollectionViewModelFactory,
-                                    IWordUsageViewModelFactory wordUsageFactory,
-                                    IWordViewModelFactory wordViewModelFactory)
+        public WordDetailsPageViewModel(IWordService wordService,
+                                        IBlobCollectionViewModelDIFactory blobCollectionViewModelFactory,
+                                        IWordUsageViewViewModelDIFactory wordUsageViewFactory,
+                                        IWordWrapperViewModelDIFactory wordWrapperFactory)
         {
             _wordService = wordService;
-            _wordViewModelFactory = wordViewModelFactory;
+            _wordWrapperFactory = wordWrapperFactory;
 
             SetupValidation();
 
             // important to create the view models in constructor for propper binding
             WordBlobsVM = blobCollectionViewModelFactory.Create(_wordsSubject);
-            WordUsageVM = wordUsageFactory.Create(
+            WordUsageViewVM = wordUsageViewFactory.Create(
                 this.WhenAnyValue(vm => vm.SelectedWord)
-                    .WhereNotNull());
+                    .WhereNotNull()
+                    .Select(x => !x.IsManaged ? null : x.Entity));
 
             // Add static placeholder item
             _staticItems.Add(new NewWordPlaceholder());
@@ -99,7 +100,7 @@ namespace WordMasterApp.Features
             {
                 // Setup main collection pipeline
                 _wordService.Words
-                    .Transform(word => _wordViewModelFactory.Create(word) as IBlobCollectionDisplayable)
+                    .Transform(word => _wordWrapperFactory.Create(word) as IBlobCollectionDisplayable)
                     .MergeChangeSets(_staticItems.Connect())
                     .Sort(SortExpressionComparer<IBlobCollectionDisplayable>
                         .Ascending(x => x is NewWordPlaceholder ? 0 : 1))
@@ -135,8 +136,8 @@ namespace WordMasterApp.Features
                     {
                         var found = items.FirstOrDefault(w => w.Id == id);
                         return found is NewWordPlaceholder
-                            ? _wordViewModelFactory.Create()
-                            : found as WordViewModel;
+                            ? _wordWrapperFactory.Create()
+                            : found as WordWrapperViewModel;
                     })
                     .Do(_ => HasTriedToUpdate = false) // Reset the update flag when a new word is selected
                     .ObserveOn(RxApp.MainThreadScheduler)

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WordMasterApp.Components.Header"
+             x:Name="Root">
+
+    <ContentView.Resources>
+        <Style x:Key="HeaderButtonStyle" TargetType="Button">
+            <Setter Property="WidthRequest" Value="40" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="4,0" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="BorderWidth" Value="2" />
+            <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal" />
+                        <VisualState x:Name="Disabled">
+                            <VisualState.Setters>
+                                <Setter Property="Opacity" Value="0.5" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="PointerOver">
+                            <VisualState.Setters>
+                                <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="Opacity" Value="0.8" />
+                                <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+    </ContentView.Resources>
+
+    <Grid RowDefinitions="Auto,3"
+          RowSpacing="0"
+          Margin="0">
+        
+        <!-- Header Content -->
+        <Grid Grid.Row="0" 
+              ColumnDefinitions="*,Auto" 
+              Padding="16,8">
+            
+            <Label Grid.Column="0"
+                   VerticalOptions="Center"
+                   Text="{Binding Title, Source={x:Reference Root}}"
+                   FontSize="19"
+                   FontAttributes="Bold" />
+
+            <CollectionView Grid.Column="1"
+                          ItemsSource="{Binding Buttons, Source={x:Reference Root}}"
+                          ItemsLayout="HorizontalList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate >
+                        <Button x:Name="HeaderButton"
+                                Style="{StaticResource HeaderButtonStyle}"
+                                Command="{Binding Command}"
+                                CommandParameter="{Binding CommandParameter}">
+                            <Button.ImageSource>
+                                <FontImageSource FontFamily="{Binding FontFamily}"
+                                                 Glyph="{Binding Glyph}"
+                                                 Color="{Binding TextColor, Source={RelativeSource AncestorType={x:Type Button}}}"
+                                                 Size="18" />
+                            </Button.ImageSource>
+                        </Button>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+        
+        <!-- Separator Line -->
+        <BoxView Grid.Row="1"
+                 VerticalOptions="Fill"
+                 HorizontalOptions="Fill"
+                 Color="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+    </Grid>
+</ContentView>

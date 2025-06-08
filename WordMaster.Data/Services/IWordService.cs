@@ -9,7 +9,6 @@ namespace WordMaster.Data.Services
         IObservable<IChangeSet<Word>> Words { get; }
         BehaviorSubject<string> FilterSubject { get; }
 
-        Word? Find(Guid id);
         Task CreateAsync(Word entity);
         Task DeleteAsync(Word entity);
         Task UpdateAsync(Word entity, Action<Word> updater);

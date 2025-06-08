@@ -7,23 +7,19 @@
              x:Name="RootPage"
              Title="WordPage">
 
-    <ScrollView>
-        <Grid ColumnDefinitions="*,*,*"
+    <Grid ColumnDefinitions="*,1.5*"
               RowDefinitions="*"
               Padding="20">
 
-            <!-- Left Column: Form -->
-            <StackLayout Grid.Column="0"
-                         Spacing="16"
-                         VerticalOptions="Start">
-                <FlexLayout AlignContent="Stretch"
-                            JustifyContent="SpaceBetween"
-                            Direction="Row"
-                            AlignItems="Stretch">
-                    <Button Text="Save" FlexLayout.Basis="33%" Margin="1" Command="{Binding UpdateCommand}" />
-                    <Button Text="Delete" FlexLayout.Basis="33%" Margin="1" Command="{Binding DeleteCommand}" />
-                    <Button Text="Back" FlexLayout.Basis="33%" Margin="1" Clicked="Back_Clicked"  />
-                </FlexLayout>
+        <ScrollView Grid.Column="0"
+                    Padding="10">
+            <StackLayout Spacing="16" VerticalOptions="Start">
+                <Grid ColumnDefinitions="*,*,*"
+                      ColumnSpacing="5">
+                    <Button Grid.Column="0" Text="Save" Command="{Binding UpdateCommand}" />
+                    <Button Grid.Column="1" Text="Delete" Command="{Binding DeleteCommand}" />
+                    <Button Grid.Column="2" Text="Back" Clicked="Back_Clicked"  />
+                </Grid>
 
                 <Label Text="Word" />
                 <Entry Text="{Binding SelectedWord.Text}" Placeholder="Enter word" />
@@ -38,14 +34,17 @@
                         HeightRequest="100"
                         Text="{Binding SelectedWord.Definition}" />
 
-                <local:WordUsageView ViewModel="{Binding WordUsageVM}" />
+                <local:WordUsageView ViewModel="{Binding WordUsageViewVM}" />
             </StackLayout>
+        </ScrollView>
 
-            <StackLayout Grid.Column="1">
-                <Entry x:Name="SearchEntry"
-                       Placeholder="Search words"
-                       Text="{Binding SearchText, Mode=TwoWay}"
-                       Margin="0,0,0,10" />
+        <ScrollView Grid.Column="1"
+                    Padding="10">
+            <StackLayout>
+                <SearchBar x:Name="SearchEntry"
+                           Placeholder="Search words"
+                           Text="{Binding SearchText, Mode=TwoWay}"
+                           Margin="0,0,0,10" />
 
                 <Label>
                     <Label.FormattedText>
@@ -60,8 +59,7 @@
                                      x:Name="BlobCollection"
                                      ViewModel="{Binding WordBlobsVM}" />
             </StackLayout>
+        </ScrollView>
 
-            
-        </Grid>
-    </ScrollView>
+    </Grid>
 </ContentPage>
