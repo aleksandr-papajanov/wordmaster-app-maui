@@ -5,6 +5,8 @@ namespace WordMasterApp.Components.BlobCollection
     public partial class BlobCollectionItem<T> : ReactiveObject
         where T : IBlobCollectionDisplayable
     {
+        public Guid Id { get; }
+        
         private string _text = string.Empty;
         public string Text
         {
@@ -19,13 +21,13 @@ namespace WordMasterApp.Components.BlobCollection
             set => this.RaiseAndSetIfChanged(ref _isSelected, value);
         }
 
-        public Guid Id { get; }
         public T OriginalItem { get; }
+
 
         public BlobCollectionItem(T item)
         {
-            OriginalItem = item;
             Id = item.Id;
+            OriginalItem = item;
             Text = item.Text;
         }
     }

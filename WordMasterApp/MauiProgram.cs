@@ -1,10 +1,14 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using System.Data;
 using WordMaster.Data.Infrastructure;
 using WordMaster.Data.Services;
+<<<<<<< HEAD
+=======
+using WordMasterApp.Components;
+>>>>>>> 6c4b5eb (Add word usage feature)
 using WordMasterApp.DIFactories;
 using WordMasterApp.Features;
-using WordMasterApp.Infrastructure;
 
 namespace WordMasterApp
 {
@@ -14,20 +18,29 @@ namespace WordMasterApp
         {
             var builder = MauiApp.CreateBuilder();
 
+            // di factories
+            builder.Services.AddTransient<IWordUsageViewViewModelDIFactory, WordUsageViewViewModelDIFactory>(); // WordUsageView
+            builder.Services.AddTransient<IWordUsageWrapperViewModelDIFactory, WordUsageWrapperViewModelDIFactory>(); // wrapper for WordUsage
+            builder.Services.AddTransient<IWordWrapperViewModelDIFactory, WordWrapperViewModelDIFactory>(); // wrapper for Word
+            builder.Services.AddTransient<IBlobCollectionViewModelDIFactory, BlobCollectionViewModelDIFactory>();
+
+            // data and services
             builder.Services.AddTransient<IDataContext, RealmDataContext>();
             builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+            builder.Services.AddTransient<IDataSeeder, DataSeeder>();
             builder.Services.AddSingleton<IWordService, WordService>();
             builder.Services.AddSingleton<IWordUsageService, WordUsageService1>();
 
-            builder.Services.AddTransient<IWordUsageViewModelFactory, WordUsageViewModelFactory>();
-            builder.Services.AddTransient<IWordViewModelFactory, WordViewModelFactory>();
-            builder.Services.AddTransient<IBlobCollectionViewModelFactory, BlobCollectionViewModelFactory>();
+            //components
 
+            // pages and viewmodels
             builder.Services.AddTransient<WordDetailsPage>();
-            builder.Services.AddTransient<WordDetailsViewModel>();
+            builder.Services.AddTransient<WordDetailsPageViewModel>();
 
             builder.Services.AddTransient<WordUsageView>();
-            builder.Services.AddTransient<WordUsageViewModel>();
+            builder.Services.AddTransient<WordUsageViewViewModel>();
+
+            
 
             builder
                 .UseMauiApp<App>()
@@ -36,11 +49,14 @@ namespace WordMasterApp
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                    fonts.AddFont("fa-solid-900.ttf", "FontAwesomeSolid");
+                    fonts.AddFont("fa-regular-400.ttf", "FontAwesomeRegular");
                 });
 
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
+
 
             return builder.Build();
         }

@@ -8,7 +8,7 @@
     Title="WordMasterApp">
 
    <TabBar>
-        <ShellContent Title="Words" ContentTemplate="{DataTemplate local:WordDetailsPage}" Route="WordListPage" />
+        <ShellContent Title="Words" ContentTemplate="{DataTemplate local:WordDetailsPage}" Route="WordDetailsPage" />
     </TabBar>
 
     <ShellContent

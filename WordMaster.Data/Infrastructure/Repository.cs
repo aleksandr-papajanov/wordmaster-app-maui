@@ -24,6 +24,11 @@ namespace WordMaster.Data.Infrastructure
             return _context.Find<T>(id);
         }
         
+        public T? Find(string id)
+        {
+            return _context.Find<T>(id);
+        }
+        
         public void Create(T entity)
         {
             _context.Create(entity);

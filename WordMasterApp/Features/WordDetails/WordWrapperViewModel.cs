@@ -5,12 +5,13 @@ using WordMasterApp.Components.BlobCollection;
 
 namespace WordMaster.Data.ViewModels
 {
-    public class WordViewModel : ReactiveObject, IBlobCollectionDisplayable
+    public class WordWrapperViewModel : ReactiveObject, IBlobCollectionDisplayable
     {
-        private readonly IWordService _wordService;
-        private readonly Word _word;
+        private readonly IWordService _service;
+        private readonly Word _entity;
 
-        public bool IsManaged => _word.IsManaged;
+        public bool IsManaged => _entity.IsManaged;
+        public Word Entity => _entity;
 
 
         private Guid _id;
@@ -26,14 +27,14 @@ namespace WordMaster.Data.ViewModels
             get => _text;
             set => this.RaiseAndSetIfChanged(ref _text, value);
         }
-        
+
         private string _translation;
         public string Translation
         {
             get => _translation;
             set => this.RaiseAndSetIfChanged(ref _translation, value);
         }
-        
+
         private string _definition;
         public string Definition
         {
@@ -41,68 +42,68 @@ namespace WordMaster.Data.ViewModels
             set => this.RaiseAndSetIfChanged(ref _definition, value);
         }
 
-        public WordViewModel(IWordService wordService) : this(new Word(), wordService)
+        public WordWrapperViewModel(IWordService wordService) : this(new Word(), wordService)
         {
         }
 
-        public WordViewModel(Word word, IWordService wordService)
+        public WordWrapperViewModel(Word entity, IWordService service)
         {
-            _word = word;
-            _wordService = wordService;
+            _entity = entity;
+            _service = service;
 
-            _id = word.Id;
-            _text = word.Text;
-            _translation = word.Translation;
-            _definition = word.Definition;
+            _id = _entity.Id;
+            _text = _entity.Text;
+            _translation = _entity.Translation;
+            _definition = _entity.Definition;
 
-            _word.PropertyChanged += (s, e) =>
+            _entity.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(Word.Id))
                 {
-                    Id = _word.Id;
+                    Id = _entity.Id;
                 }
                 if (e.PropertyName == nameof(Word.Text))
                 {
-                    Text = _word.Text;
+                    Text = _entity.Text;
                 }
                 else if (e.PropertyName == nameof(Word.Translation))
                 {
-                    Translation = _word.Translation;
+                    Translation = _entity.Translation;
                 }
                 else if (e.PropertyName == nameof(Word.Definition))
                 {
-                    Definition = _word.Definition;
+                    Definition = _entity.Definition;
                 }
             };
         }
 
-        
+
         public async Task UpdateAsync()
         {
             if (IsManaged)
             {
-                await _wordService.UpdateAsync(_word, (word) =>
+                await _service.UpdateAsync(_entity, (entity) =>
                 {
-                    word.Id = Id;
-                    word.Text = Text;
-                    word.Translation = Translation;
-                    word.Definition = Definition;
+                    entity.Id = Id;
+                    entity.Text = Text;
+                    entity.Translation = Translation;
+                    entity.Definition = Definition;
                 });
             }
             else
             {
-                _word.Id = Id;
-                _word.Text = Text;
-                _word.Translation = Translation;
-                _word.Definition = Definition;
+                _entity.Id = Id;
+                _entity.Text = Text;
+                _entity.Translation = Translation;
+                _entity.Definition = Definition;
 
-                await _wordService.CreateAsync(_word);
+                await _service.CreateAsync(_entity);
             }
         }
 
         public async Task DeleteAsync()
         {
-            await _wordService.DeleteAsync(_word);
+            await _service.DeleteAsync(_entity);
         }
     }
 }

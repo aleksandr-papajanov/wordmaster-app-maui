@@ -11,6 +11,7 @@ namespace WordMaster.Data.Infrastructure
 {
     internal static class RealmExtensions
     {
+<<<<<<< HEAD
         public static IObservable<IChangeSet<T>> ToObservableChangeSet1<T>(this IRealmCollection<T> collection)
         where T : RealmObject
         {
@@ -47,6 +48,43 @@ namespace WordMaster.Data.Infrastructure
                 });
             });
         }
+=======
+       // public static IObservable<IChangeSet<T>> ToObservableChangeSetCustom<T>(this IRealmCollection<T> collection)
+       //where T : RealmObject
+       // {
+       //     return Observable.Create<IChangeSet<T>>(observer =>
+       //     {
+       //         return collection.SubscribeForNotifications((sender, changes) =>
+       //         {
+       //             // ToDo: handle errors
+
+       //             if (changes == null)
+       //             {
+       //                 return; // initial subscription, ignore
+       //             }
+
+       //             var changeSet = new ChangeSet<T>();
+
+       //             foreach (var index in changes.DeletedIndices.OrderByDescending(i => i))
+       //             {
+       //                 changeSet.RemoveAt(index); // или sender не содержит index?
+       //             }
+
+       //             //foreach (var index in changes.ModifiedIndices)
+       //             //{
+       //             //    changeSet.Replace(sender[index], sender[index], index);
+       //             //}
+
+       //             foreach (var index in changes.InsertedIndices)
+       //             {
+       //                 changeSet.Add(new Change<T>(ListChangeReason.Add, sender[index]));
+       //             }
+
+       //             observer.OnNext(changeSet);
+       //         });
+       //     });
+       // }
+>>>>>>> 6c4b5eb (Add word usage feature)
 
         public static IDisposable BindToSourceList<T>(this IRealmCollection<T> collection, ISourceList<T> targetSourceList)
             where T : RealmObject

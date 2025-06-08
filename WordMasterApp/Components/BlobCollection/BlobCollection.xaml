@@ -5,9 +5,20 @@
              x:Class="WordMasterApp.Components.BlobCollection.BlobCollection"
              x:Name="Root">
     <ContentView.Resources>  
-        <ResourceDictionary>  
-            <DataTemplate x:Key="RegularTemplate">  
-                <Frame Padding="10" Margin="2" CornerRadius="10">  
+        <ResourceDictionary>
+            <Style x:Key="BlobStyle" TargetType="Frame">
+                <Setter Property="Margin" Value="2" />
+                <Setter Property="Padding" Value="16,12" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="Triggers">
+                    
+                </Setter>
+            </Style>
+
+
+            <DataTemplate x:Key="RegularTemplate">
+                <Frame Style="{StaticResource BlobStyle}">  
                     <Label Text="{Binding Text}" />  
 
                     <Frame.GestureRecognizers>
@@ -15,16 +26,16 @@
                                               CommandParameter="{Binding .}" />
                     </Frame.GestureRecognizers>  
 
-                    <Frame.Triggers>  
-                        <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">  
-                            <Setter Property="BackgroundColor" Value="Blue"/>  
-                        </DataTrigger>  
+                    <Frame.Triggers>
+                        <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"/>
+                        </DataTrigger>
                     </Frame.Triggers>  
                 </Frame>  
             </DataTemplate>  
 
-            <DataTemplate x:Key="CreateTemplate">  
-                <Frame Padding="10" Margin="2" CornerRadius="10">  
+            <DataTemplate x:Key="CreateTemplate">
+                <Frame Style="{StaticResource BlobStyle}">  
                     <Label Text="Create new" />  
 
                     <Frame.GestureRecognizers>
@@ -32,10 +43,10 @@
                                               CommandParameter="{Binding .}" />
                     </Frame.GestureRecognizers>  
 
-                    <Frame.Triggers>  
-                        <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">  
-                            <Setter Property="BackgroundColor" Value="Red"/>  
-                        </DataTrigger>  
+                    <Frame.Triggers>
+                        <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}"/>
+                        </DataTrigger>
                     </Frame.Triggers>  
                 </Frame>  
             </DataTemplate>  

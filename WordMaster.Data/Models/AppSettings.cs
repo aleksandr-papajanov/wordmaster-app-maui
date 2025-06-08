@@ -7,11 +7,10 @@ using System.Threading.Tasks;
 
 namespace WordMaster.Data.Models
 {
-    public class Language : RealmObject
+    public class AppSettings : RealmObject
     {
         [PrimaryKey]
-        public string Code { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        
+        public string Id { get; set; } = "global";
+        public bool IsInitialized { get; set; } = false;
     }
 }

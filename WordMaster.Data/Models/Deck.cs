@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace WordMaster.Data.Models
 {
-    internal partial class Deck : RealmObject
+    public partial class Deck : RealmObject
     {
         [PrimaryKey]
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; }
+        public string SourceLanguageCode { get; set; } = string.Empty;
+        public string TargetLanguageCode { get; set; } = string.Empty;
 
         public string Name { get; set; } = string.Empty;
-        public Language SourceLang { get; set; } = null!;
-        public Language TargetLang { get; set; } = null!;
-        public IList<Word> Words { get; } = null!;
+        
     }
 }

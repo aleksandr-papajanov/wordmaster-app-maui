@@ -47,44 +47,28 @@
 
 
     <Color x:Key="PrimaryLight">#5C4FA1</Color>
-    <Color x:Key="PrimaryDark">#A387BE</Color>
-    <SolidColorBrush x:Key="PrimaryLightBrush" Color="#5C4FA1"  />
-    <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#A387BE" />
+    <Color x:Key="PrimaryDark">#5C4FA1</Color>
 
     <Color x:Key="PrimaryVariantLight" >#443A95</Color>
     <Color x:Key="PrimaryVariantDark">#443A95</Color>
-    <SolidColorBrush x:Key="PrimaryVariantLightBrush" Color="#443A95"  />
-    <SolidColorBrush x:Key="PrimaryVariantDarkBrush"  Color="#443A95" />
 
     <Color x:Key="SecondaryLight">#4DC0B7</Color>
-    <Color x:Key="SecondaryDark">#00FFE6</Color>
-    <SolidColorBrush x:Key="SecondaryLightBrush" Color="#4DC0B7"  />
-    <SolidColorBrush x:Key="SecondaryDarkBrush"  Color="#00FFE6" />
+    <Color x:Key="SecondaryDark">#4DC0B7</Color>
 
     <Color x:Key="SecondaryVariantLight">#008786</Color>
-    <Color x:Key="SecondaryVariantDark">#4DC1B8</Color>
-    <SolidColorBrush x:Key="SecondaryVariantLightBrush" Color="#008786" />
-    <SolidColorBrush x:Key="SecondaryVariantDarkBrush"  Color="#4DC1B8" />
+    <Color x:Key="SecondaryVariantDark">#008786</Color>
 
     <Color x:Key="TextLight">#000000</Color>
     <Color x:Key="TextDark">#FFFFFF</Color>
-    <SolidColorBrush x:Key="TextLightBrush" Color="#000000"  />
-    <SolidColorBrush x:Key="TextDarkBrush"  Color="#FFFFFF" />
 
     <Color x:Key="TextInvertedLight">#FFFFFF</Color>
     <Color x:Key="TextInvertedDark">#000000</Color>
-    <SolidColorBrush x:Key="TextInvertedLightBrush" Color="#FFFFFF"  />
-    <SolidColorBrush x:Key="TextInvertedDarkBrush"  Color="#000000" />
 
     <Color x:Key="BackgroundLight">#FFFFFF</Color>
     <Color x:Key="BackgroundDark">#131313</Color>
-    <SolidColorBrush x:Key="BackgroundLightBrush" Color="#FFFFFF"  />
-    <SolidColorBrush x:Key="BackgroundDarkBrush"  Color="#131313" />
 
     <Color x:Key="ErrorLight">#B01F25</Color>
-    <Color x:Key="ErrorDark">#CE6679</Color>
-    <SolidColorBrush x:Key="ErrorLightBrush" Color="#B01F25"  />
-    <SolidColorBrush x:Key="ErrorDarkBrush" Color="#CE6679" />
+    <Color x:Key="ErrorDark">#B01F25</Color>
 
 
 
