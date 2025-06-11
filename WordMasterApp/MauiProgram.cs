@@ -3,10 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Data;
 using WordMaster.Data.Infrastructure;
 using WordMaster.Data.Services;
-<<<<<<< HEAD
-=======
 using WordMasterApp.Components;
->>>>>>> 6c4b5eb (Add word usage feature)
 using WordMasterApp.DIFactories;
 using WordMasterApp.Features;
 

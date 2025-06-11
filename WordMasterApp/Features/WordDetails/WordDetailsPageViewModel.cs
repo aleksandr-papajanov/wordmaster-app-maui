@@ -12,10 +12,6 @@ using WordMaster.Data.Services;
 using WordMaster.Data.ViewModels;
 using WordMasterApp.Components.BlobCollection;
 using WordMasterApp.DIFactories;
-<<<<<<< HEAD:WordMasterApp/Features/WordDetails/WordDetailsViewModel.cs
-using WordMasterApp.Infrastructure;
-=======
->>>>>>> 6c4b5eb (Add word usage feature):WordMasterApp/Features/WordDetails/WordDetailsPageViewModel.cs
 
 namespace WordMasterApp.Features
 {
@@ -80,12 +76,7 @@ namespace WordMasterApp.Features
             WordUsageViewVM = wordUsageViewFactory.Create(
                 this.WhenAnyValue(vm => vm.SelectedWord)
                     .WhereNotNull()
-<<<<<<< HEAD:WordMasterApp/Features/WordDetails/WordDetailsViewModel.cs
-                    .Where(x => x.IsManaged)
-                    .Select(x => x.Id));
-=======
                     .Select(x => !x.IsManaged ? null : x.Entity));
->>>>>>> 6c4b5eb (Add word usage feature):WordMasterApp/Features/WordDetails/WordDetailsPageViewModel.cs
 
             // Add static placeholder item
             _staticItems.Add(new NewWordPlaceholder());
