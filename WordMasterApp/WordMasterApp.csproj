@@ -57,6 +57,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <AndroidResource Remove="Infrastructure\**" />
+	  <Compile Remove="Infrastructure\**" />
+	  <EmbeddedResource Remove="Infrastructure\**" />
+	  <MauiCss Remove="Infrastructure\**" />
+	  <MauiXaml Remove="Infrastructure\**" />
+	  <None Remove="Infrastructure\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="DynamicData" Version="9.3.2" />
@@ -81,13 +90,22 @@
 	  <MauiXaml Update="Components\Header\Header.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Components\ValidationEntry\ValidationWrapper.xaml">
+	  <MauiXaml Update="Components\ValidationWrapper\ValidationWrapper.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\DeckList\DeckListView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\MainPage\MainPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\WordList\WordListView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Features\WordUsage\WordUsageView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Features\WordDetails\WordDetailsPage.xaml">
+	  <MauiXaml Update="Features\WordDetails\WordDetailsView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
@@ -96,11 +114,17 @@
 	  <Compile Update="Components\Header\Header.xaml.cs">
 	    <DependentUpon>Header.xaml</DependentUpon>
 	  </Compile>
-	  <Compile Update="Components\ValidationEntry\ValidationWrapper.xaml.cs">
+	  <Compile Update="Components\ValidationWrapper\ValidationWrapper.xaml.cs">
 	    <DependentUpon>ValidationWrapper.xaml</DependentUpon>
 	  </Compile>
-	  <Compile Update="Features\WordDetails\WordDetailsPage.xaml.cs">
-	    <DependentUpon>WordDetailsPage.xaml</DependentUpon>
+	  <Compile Update="Features\DeckList\DeckListView.xaml.cs">
+	    <DependentUpon>DeckListView.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Features\MainPage\MainPage.xaml.cs">
+	    <DependentUpon>MainPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Features\WordDetails\WordDetailsView.xaml.cs">
+	    <DependentUpon>WordDetailsView.xaml</DependentUpon>
 	  </Compile>
 	  <Compile Update="Features\WordUsage\WordUsageView.xaml.cs">
 	    <DependentUpon>WordUsageView.xaml</DependentUpon>
@@ -117,10 +141,6 @@
 	    <Generator>ResXFileCodeGenerator</Generator>
 	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
 	  </EmbeddedResource>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Infrastructure\" />
 	</ItemGroup>
 
 </Project>

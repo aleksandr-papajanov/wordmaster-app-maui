@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WordMasterApp.Features.DeckList.DeckListView"
+             x:Name="This">
+    <VerticalStackLayout>
+
+        <!-- Main word collection-->
+        <CollectionView x:Name="Decks"
+                        SelectionMode="None">
+            <!-- Define the ItemsLayout -->
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical"
+                                   ItemSpacing="1" />
+            </CollectionView.ItemsLayout>
+
+            <!-- Use the Template Selector -->
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="16,12"
+                            StrokeShape="RoundRectangle 8"
+                            StrokeThickness="0">
+                        <Label Text="{Binding Name}" />
+
+                        <!-- Service -->
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Value="True">
+                                <DataTrigger.Binding>
+                                    <MultiBinding Converter="{StaticResource IsEqualToBoolConverter}">
+                                        <Binding Path="BindingContext.SelectedDeck" Source="{x:Reference This}" />
+                                        <Binding Path="." />
+                                    </MultiBinding>
+                                </DataTrigger.Binding>
+                                <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding BindingContext.SelectDeckCommand, Source={x:Reference This}}"
+                                                  CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <!-- Empty State -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Spacing="8"
+                                     Padding="24">
+                    <Label Text="No decks found"
+                           FontSize="18"
+                           HorizontalOptions="Center" />
+                    <Label Text="Try adjusting your search or add new decks"
+                           FontSize="12"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+    </VerticalStackLayout>
+</ContentView>

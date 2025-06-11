@@ -2,35 +2,19 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             xmlns:components="clr-namespace:WordMasterApp.Components"
+             xmlns:header="clr-namespace:WordMasterApp.Components.Header"
+             xmlns:validation="clr-namespace:WordMasterApp.Components.ValidationWrapper"
              xmlns:converters="clr-namespace:WordMasterApp.Converters"
              x:Class="WordMasterApp.Features.WordUsageView"
              x:Name="Root">
-
     <ContentView.Resources>
-        
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
 
         <Style x:Key="UsageItemStyle" TargetType="Border">
             <Setter Property="Padding" Value="16,12" />
-            <Setter Property="StrokeThickness" Value="2" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+            <Setter Property="StrokeThickness" Value="0" />
             <Setter Property="Stroke" Value="Transparent" />
-            <!--<Setter Property="VisualStateManager.VisualStateGroups">
-                <VisualStateGroupList>
-                    <VisualStateGroup x:Name="CommonStates">
-                        <VisualState x:Name="Normal">
-                            <VisualState.Setters>
-                                <Setter Property="Stroke" Value="Transparent" />
-                            </VisualState.Setters>
-                        </VisualState>
-                        <VisualState x:Name="Selected">
-                            <VisualState.Setters>
-                                <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
-                            </VisualState.Setters>
-                        </VisualState>
-
-                    </VisualStateGroup>
-                </VisualStateGroupList>
-            </Setter>-->
         </Style>
 
         <Style x:Key="UsageTextStyle" TargetType="Label">
@@ -48,102 +32,101 @@
 
     <VerticalStackLayout>
         <!-- Header -->
-        <components:Header Title="Examples in context">
-            <components:Header.Buttons>
-                <components:HeaderButton Glyph="&#xf15b;"
-                                         FontFamily="FontAwesomeRegular"
-                                         Command="{Binding ViewModel.CreateCommand, Source={x:Reference Root}}" />
-                <components:HeaderButton Glyph="&#xf0c7;"
-                                         FontFamily="FontAwesomeRegular"
-                                         Command="{Binding ViewModel.UpdateCommand, Source={x:Reference Root}}" />
-                <components:HeaderButton Glyph="&#xf246;"
-                                         Command="{Binding ViewModel.EditCommand, Source={x:Reference Root}}"
-                                         IsToggled="True" />
-                <components:HeaderButton Glyph="&#xf00d;"
-                                         Command="{Binding ViewModel.DeleteCommand, Source={x:Reference Root}}" />
-            </components:Header.Buttons>
-        </components:Header>
+        <header:Header Title="Examples in context">
+            <header:Header.Buttons>
+                <header:HeaderButton Glyph="&#xf15b;"
+                                     FontFamily="FontAwesomeRegular"
+                                     Command="{Binding ViewModel.CreateCommand, Source={x:Reference Root}}" />
+                <header:HeaderButton Glyph="&#xf0c7;"
+                                     FontFamily="FontAwesomeRegular"
+                                     Command="{Binding ViewModel.UpdateCommand, Source={x:Reference Root}}" />
+                <header:HeaderButton Glyph="&#xf246;"
+                                     Command="{Binding ViewModel.EditCommand, Source={x:Reference Root}}"
+                                     IsToggled="True" />
+                <header:HeaderButton Glyph="&#xf00d;"
+                                     Command="{Binding ViewModel.DeleteCommand, Source={x:Reference Root}}" />
+            </header:Header.Buttons>
+        </header:Header>
 
         <!-- Form -->
-        <VerticalStackLayout IsVisible="{Binding IsEditFormVisible}">
-            <VerticalStackLayout Spacing="15"
-                                 Padding="30,15">
-                <components:ValidationWrapper x:Name="TextValidationWrapper"
-                                              ValidationIsVisible="True">
-                    <components:ValidationWrapper.InnerContent>
-                        <Entry Placeholder="Enter example"
-                               Text="{Binding Text}" />
-                    </components:ValidationWrapper.InnerContent>
-                </components:ValidationWrapper>
+        <VerticalStackLayout IsVisible="{Binding IsEditFormVisible}"
+                             Spacing="15"
+                             Margin="0,15,0,0">
+            <validation:ValidationWrapper x:Name="TextValidationWrapper"
+                                          ValidationIsVisible="True">
+                <validation:ValidationWrapper.InnerContent>
+                    <Entry Placeholder="Enter example"
+                           Text="{Binding Text}" />
+                </validation:ValidationWrapper.InnerContent>
+            </validation:ValidationWrapper>
 
-                <components:ValidationWrapper x:Name="TranslationValidationWrapper"
-                                              ValidationIsVisible="True">
-                    <components:ValidationWrapper.InnerContent>
-                        <Entry Placeholder="Enter translation"
-                               Text="{Binding Translation}" />
-                    </components:ValidationWrapper.InnerContent>
-                </components:ValidationWrapper>
-            </VerticalStackLayout>
-
-            <BoxView HeightRequest="2" Color="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+            <validation:ValidationWrapper x:Name="TranslationValidationWrapper"
+                                          ValidationIsVisible="True">
+                <validation:ValidationWrapper.InnerContent>
+                    <Entry Placeholder="Enter translation"
+                           Text="{Binding Translation}" />
+                </validation:ValidationWrapper.InnerContent>
+            </validation:ValidationWrapper>
         </VerticalStackLayout>
 
-        
 
-        <!-- Search bar -->
-        <SearchBar Placeholder="Search usages..."
-                   Text="{Binding SearchText}"
-                   Margin="12,8" />
 
-        <!-- Collection -->
-        <CollectionView ItemsSource="{Binding Usages}"
-                        SelectionMode="None">
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Vertical"
-                                   ItemSpacing="1" />
-            </CollectionView.ItemsLayout>
+        <VerticalStackLayout IsVisible="{Binding IsEditFormVisible, Converter={StaticResource InverseBoolConverter}}">
+            <!-- Search bar -->
+            <SearchBar Placeholder="Search usages..."
+                       Text="{Binding SearchText}"
+                       Margin="12,8" />
 
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border Style="{StaticResource UsageItemStyle}">
-                        <Border.Triggers>
-                            <DataTrigger TargetType="Border" Value="True">
-                                <DataTrigger.Binding>
-                                    <MultiBinding Converter="{StaticResource IsEqualToBoolConverter}">
-                                        <Binding Path="ViewModel.SelectedUsage" Source="{x:Reference Root}" />
-                                        <Binding Path="." />
-                                    </MultiBinding>
-                                </DataTrigger.Binding>
-                                <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
-                            </DataTrigger>
-                        </Border.Triggers>
-                        <VerticalStackLayout>
-                            <Label Text="{Binding Text}"
-                                   Style="{StaticResource UsageTextStyle}" />
-                            <Label Text="{Binding Translation}"
-                                   Style="{StaticResource UsageTranslationStyle}" />
-                        </VerticalStackLayout>
+            <!-- Collection -->
+            <CollectionView ItemsSource="{Binding Usages}"
+                            SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical"
+                                       ItemSpacing="1" />
+                </CollectionView.ItemsLayout>
 
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding ViewModel.SelectCommand, Source={x:Reference Root}}"
-                          CommandParameter="{Binding .}" />
-                        </Border.GestureRecognizers>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource UsageItemStyle}">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Value="True">
+                                    <DataTrigger.Binding>
+                                        <MultiBinding Converter="{StaticResource IsEqualToBoolConverter}">
+                                            <Binding Path="ViewModel.SelectedUsage" Source="{x:Reference Root}" />
+                                            <Binding Path="." />
+                                        </MultiBinding>
+                                    </DataTrigger.Binding>
+                                    <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <VerticalStackLayout>
+                                <Label Text="{Binding Text}"
+                                       Style="{StaticResource UsageTextStyle}" />
+                                <Label Text="{Binding Translation}"
+                                       Style="{StaticResource UsageTranslationStyle}" />
+                            </VerticalStackLayout>
 
-            <!-- Empty State -->
-            <CollectionView.EmptyView>
-                <VerticalStackLayout Spacing="8"
-                                     Padding="24">
-                    <Label Text="No usages found"
-                           FontSize="18"
-                           HorizontalOptions="Center" />
-                    <Label Text="Try adjusting your search or add new usages"
-                           FontSize="12"
-                           HorizontalOptions="Center" />
-                </VerticalStackLayout>
-            </CollectionView.EmptyView>
-        </CollectionView>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ViewModel.SelectCommand, Source={x:Reference Root}}"
+                              CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <!-- Empty State -->
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Spacing="8"
+                                         Padding="24">
+                        <Label Text="No usages found"
+                               FontSize="18"
+                               HorizontalOptions="Center" />
+                        <Label Text="Try adjusting your search or add new usages"
+                               FontSize="12"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </VerticalStackLayout>
     </VerticalStackLayout>
 </ContentView>

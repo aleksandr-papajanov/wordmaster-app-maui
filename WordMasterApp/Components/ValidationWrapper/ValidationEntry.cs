@@ -1,3 +1,9 @@
+using ReactiveUI;
+using System.ComponentModel;
+using System.Reactive.Linq;
+
+namespace WordMasterApp.Components.ValidationWrapper;
+
 public class ValidationEntry : ContentView
 {
     public static readonly BindableProperty TextProperty =

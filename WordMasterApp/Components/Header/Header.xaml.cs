@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
-namespace WordMasterApp.Components;
+namespace WordMasterApp.Components.Header;
 
 public partial class Header : ContentView
 {
@@ -9,8 +9,8 @@ public partial class Header : ContentView
         BindableProperty.Create(nameof(Title), typeof(string), typeof(Header), string.Empty);
 
     public static readonly BindableProperty ButtonsProperty =
-        BindableProperty.Create(nameof(Buttons), typeof(ObservableCollection<HeaderButton>), typeof(Header), 
-            defaultValue: new ObservableCollection<HeaderButton>());
+        BindableProperty.Create(nameof(Buttons), typeof(ObservableCollection<HeaderButton>), typeof(Header),
+            defaultValueCreator: bindable => new ObservableCollection<HeaderButton>());
 
     public string Title
     {

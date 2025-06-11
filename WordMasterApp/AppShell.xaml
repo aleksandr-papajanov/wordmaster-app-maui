@@ -3,17 +3,13 @@
     x:Class="WordMasterApp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:WordMasterApp.Features"
+    xmlns:mainpage="clr-namespace:WordMasterApp.Features.MainPage"
     Shell.FlyoutBehavior="Disabled"
     Title="WordMasterApp">
 
-   <TabBar>
-        <ShellContent Title="Words" ContentTemplate="{DataTemplate local:WordDetailsPage}" Route="WordDetailsPage" />
-    </TabBar>
-
     <ShellContent
-        Title="About Page"
-        Route="about"
-        ContentTemplate="{DataTemplate local:WordDetailsPage}"/>
+        Title="MainPage"
+        Route="main"
+        ContentTemplate="{DataTemplate mainpage:MainPage}"/>
 
 </Shell>

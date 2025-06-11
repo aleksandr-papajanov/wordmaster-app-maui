@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:header="clr-namespace:WordMasterApp.Components.Header"
+             xmlns:converters="clr-namespace:WordMasterApp.Converters"
+             xmlns:wordList="clr-namespace:WordMasterApp.Features.WordList"
+             x:Class="WordMasterApp.Features.WordList.WordListView"
+             x:Name="Root">
+    <ContentView.Resources>
+        <converters:IsNewWordConverter x:Key="IsNewWordConverter" />
+
+        <!-- Define the Regular Template -->
+        <ControlTemplate x:Key="RegularTemplate">
+            <VerticalStackLayout>
+                <Label Text="{Binding Text}" />
+            </VerticalStackLayout>
+        </ControlTemplate>
+
+        <!-- Define the New Object Template -->
+        <ControlTemplate x:Key="NewWordTemplate">
+            <VerticalStackLayout>
+                <Label Text="New Word" />
+            </VerticalStackLayout>
+        </ControlTemplate>
+        
+    </ContentView.Resources>
+
+    <VerticalStackLayout>
+        <header:Header Title="Words in deck">
+            <header:Header.Buttons>
+                <header:HeaderButton Glyph="&#xf15b;"
+                                     FontFamily="FontAwesomeRegular"
+                                     Command="{Binding BindingContext.CreateWordCommand, Source={x:Reference Root}}" />
+                <header:HeaderButton Glyph="&#xf00d;"
+                                     Command="{Binding BindingContext.DeleteWordCommand, Source={x:Reference Root}}" />
+            </header:Header.Buttons>
+        </header:Header>
+
+        <!-- Search bar -->
+        <SearchBar Placeholder="Search usages..."
+                   Text="{Binding SearchText}"
+                   Margin="16,12" />
+
+        <!-- Main word collection-->
+        <CollectionView ItemsSource="{Binding Words}"
+                        SelectionMode="None">
+            <!-- Define the ItemsLayout -->
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical"
+                                   ItemSpacing="1" />
+            </CollectionView.ItemsLayout>
+
+            <!-- Use the Template Selector -->
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="10,5"
+                            StrokeShape="RoundRectangle 8"
+                            StrokeThickness="0">
+
+                        <ContentView>
+                            <ContentView.Triggers>
+                                <DataTrigger TargetType="ContentView"
+                                             Binding="{Binding ., Converter={StaticResource IsNewWordConverter}}"
+                                             Value="True">
+                                    <Setter Property="ControlTemplate" Value="{StaticResource NewWordTemplate}" />
+                                </DataTrigger>
+                                
+                                <DataTrigger TargetType="ContentView" 
+                                             Binding="{Binding ., Converter={StaticResource IsNewWordConverter}}"
+                                             Value="False">
+                                    <Setter Property="ControlTemplate" Value="{StaticResource RegularTemplate}" />
+                                </DataTrigger>
+                            </ContentView.Triggers>
+                        </ContentView>
+
+                        <!-- Service -->
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Value="True">
+                                <DataTrigger.Binding>
+                                    <MultiBinding Converter="{StaticResource IsEqualToBoolConverter}">
+                                        <Binding Path="ViewModel.SelectedWord.Id" Source="{x:Reference Root}" />
+                                        <Binding Path="Id" />
+                                    </MultiBinding>
+                                </DataTrigger.Binding>
+                                <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding BindingContext.SelectWordCommand, Source={x:Reference Root}}"
+                                                  CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <!-- Empty State -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Spacing="8"
+                                     Padding="24">
+                    <Label Text="No words found"
+                           FontSize="18"
+                           HorizontalOptions="Center" />
+                    <Label Text="Try adjusting your search or add new usages"
+                           FontSize="12"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+    </VerticalStackLayout>
+</ContentView>

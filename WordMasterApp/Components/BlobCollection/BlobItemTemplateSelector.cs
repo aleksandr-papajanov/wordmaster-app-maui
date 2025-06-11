@@ -9,10 +9,10 @@ namespace WordMasterApp.Components.BlobCollection
 
         protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
         {
-            if (item is BlobCollectionItem<IBlobCollectionDisplayable> blob && blob.OriginalItem is NewWordPlaceholder)
-            {
-                return CreateTemplate;
-            }
+            //if (item is BlobCollectionItem<IBlobCollectionDisplayable> blob && blob.OriginalItem is NewWordPlaceholder)
+            //{
+            //    return CreateTemplate;
+            //}
 
             return RegularTemplate;
         }

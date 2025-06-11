@@ -1,6 +1,6 @@
 using System.Windows.Input;
 
-namespace WordMasterApp.Components;
+namespace WordMasterApp.Components.Header;
 
 public class HeaderButton : BindableObject
 {

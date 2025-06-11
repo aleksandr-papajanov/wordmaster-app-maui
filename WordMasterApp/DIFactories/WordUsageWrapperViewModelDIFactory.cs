@@ -1,5 +1,5 @@
 ﻿using WordMaster.Data.Models;
-using WordMaster.Data.Services;
+using WordMaster.Data.Services.Interfaces;
 using WordMaster.Data.ViewModels;
 
 namespace WordMasterApp.DIFactories

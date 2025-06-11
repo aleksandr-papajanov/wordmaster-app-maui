@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
 using WordMaster.Data.Models;
-using WordMaster.Data.Services;
+using WordMaster.Data.Services.Interfaces;
 using WordMasterApp.Components.BlobCollection;
 
 namespace WordMaster.Data.ViewModels
@@ -42,7 +42,8 @@ namespace WordMaster.Data.ViewModels
             set => this.RaiseAndSetIfChanged(ref _definition, value);
         }
 
-        public WordWrapperViewModel(IWordService wordService) : this(new Word(), wordService)
+        public WordWrapperViewModel(Deck entity, IWordService wordService)
+            : this(new Word { DeckId = entity.Id }, wordService)
         {
         }
 

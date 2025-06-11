@@ -2,12 +2,11 @@
 using System.Reactive.Subjects;
 using WordMaster.Data.Models;
 
-namespace WordMaster.Data.Services
+namespace WordMaster.Data.Services.Interfaces
 {
     public interface IWordService
     {
-        IObservable<IChangeSet<Word>> Words { get; }
-        BehaviorSubject<string> FilterSubject { get; }
+        IObservable<IChangeSet<Word>> GetStream(Guid deckId, string filter);
 
         Task CreateAsync(Word entity);
         Task DeleteAsync(Word entity);

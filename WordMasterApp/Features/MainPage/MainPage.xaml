@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:WordMasterApp.Features.MainPage"
+             xmlns:decklist="clr-namespace:WordMasterApp.Features.DeckList"
+             x:Class="WordMasterApp.Features.MainPage.MainPage"
+             Title="MainPage">
+
+    <VisualStateManager.VisualStateGroups>
+        <VisualStateGroup>
+            <VisualState x:Name="Desktop">
+                <VisualState.StateTriggers>
+                    <AdaptiveTrigger MinWindowWidth="800" />
+                </VisualState.StateTriggers>
+                <VisualState.Setters>
+                    <Setter TargetName="DesktopLayout" Property="IsVisible" Value="True" />
+                    <Setter TargetName="MobileLayout" Property="IsVisible" Value="False" />
+                </VisualState.Setters>
+            </VisualState>
+            <VisualState x:Name="Mobile">
+                <VisualState.StateTriggers>
+                    <AdaptiveTrigger MinWindowWidth="0" />
+                </VisualState.StateTriggers>
+                <VisualState.Setters>
+                    <Setter TargetName="DesktopLayout" Property="IsVisible" Value="False" />
+                    <Setter TargetName="MobileLayout" Property="IsVisible" Value="True" />
+                </VisualState.Setters>
+            </VisualState>
+        </VisualStateGroup>
+    </VisualStateManager.VisualStateGroups>
+
+    <Grid>
+        <Grid x:Name="DesktopLayout"
+              ColumnDefinitions="1*,4*"
+              RowDefinitions="*,Auto"
+              IsVisible="False">
+            <ScrollView Grid.Column="0"
+                        Grid.Row="0"
+                        Padding="10"
+                        x:Name="Sidebar">
+
+                <local:TemplateSelector Item="{Binding SidebarSection}"  />
+            </ScrollView>
+
+            <Grid Grid.Column="1"
+                  Grid.Row="0"
+                  ColumnDefinitions="*,*">
+                <ScrollView Grid.Column="0"
+                            Padding="10"
+                            x:Name="Main">
+
+                    <local:TemplateSelector Item="{Binding MainSection}"  />
+                </ScrollView>
+
+                <ScrollView Grid.Column="1"
+                            Padding="10"
+                            x:Name="DesktopRight">
+
+                    <local:TemplateSelector Item="{Binding DetailsSection}"  />
+                </ScrollView>
+            </Grid>
+
+            <ScrollView Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        HeightRequest="50"
+                        x:Name="Detail"
+                        Background="BlanchedAlmond">
+
+            </ScrollView>
+        </Grid>
+
+        <Grid x:Name="MobileLayout"
+              BackgroundColor="Aqua"
+              IsVisible="False">
+                
+        </Grid>
+    </Grid>
+</ContentPage>

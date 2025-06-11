@@ -1,16 +1,17 @@
 ﻿using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Validation.Abstractions;
 using ReactiveUI.Validation.Contexts;
 using ReactiveUI.Validation.Extensions;
+using Realms;
 using System.Collections.ObjectModel;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Input;
 using WordMaster.Data.Models;
-using WordMaster.Data.Services;
+using WordMaster.Data.Services.Interfaces;
 using WordMaster.Data.ViewModels;
 using WordMasterApp.DIFactories;
 
@@ -26,8 +27,8 @@ namespace WordMasterApp.Features
         private ReadOnlyObservableCollection<WordUsageWrapperViewModel> _usages;
         public ReadOnlyObservableCollection<WordUsageWrapperViewModel> Usages => _usages;
 
-        private Word _currentWord;
-        public Word CurrentWord
+        private WordWrapperViewModel _currentWord;
+        public WordWrapperViewModel CurrentWord
         {
             get => _currentWord;
             set => this.RaiseAndSetIfChanged(ref _currentWord, value);
@@ -87,7 +88,7 @@ namespace WordMasterApp.Features
         public ICommand SelectCommand { get; private set; }
 
 
-        public WordUsageViewViewModel(IObservable<Word?> word, IWordUsageService service, IWordUsageWrapperViewModelDIFactory wordUsageWrapperFactory)
+        public WordUsageViewViewModel(IObservable<WordWrapperViewModel?> word, IWordUsageService service, IWordUsageWrapperViewModelDIFactory wordUsageWrapperFactory)
         {
             _wordUsageWrapperFactory = wordUsageWrapperFactory;
 
@@ -96,20 +97,21 @@ namespace WordMasterApp.Features
 
             this.WhenActivated(disposables =>
             {
-                service
-                    .GetStream(word, _searchTextSubject.AsObservable())
+                Observable
+                    .CombineLatest(word, _searchTextSubject.AsObservable(), (word, filter) => (word, filter))
+                    .Select(x => x.word == null
+                        ? Observable.Return(ChangeSet<WordUsage>.Empty)
+                        : service.GetStream(x.word.Id, x.filter))
+                    .Switch()
                     .Transform(x => wordUsageWrapperFactory.Create(x))
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Bind(out _usages)
                     .DisposeMany()
-                    .Subscribe(a =>
-                    {
-                        this.RaisePropertyChanged(nameof(Usages));
-                    })
+                    .Subscribe(_ => this.RaisePropertyChanged(nameof(Usages)))
                     .DisposeWith(disposables);
 
                 this.WhenAnyValue(x => x.SearchText)
-                    .Throttle(TimeSpan.FromMilliseconds(100))
+                    .Throttle(TimeSpan.FromMilliseconds(80))
                     .Select(text => text?.Trim() ?? string.Empty)
                     .DistinctUntilChanged()
                     .ObserveOn(RxApp.MainThreadScheduler)
@@ -230,7 +232,7 @@ namespace WordMasterApp.Features
                 if (CurrentWord == null)
                     return;
 
-                var newUsage = _wordUsageWrapperFactory.Create(CurrentWord);
+                var newUsage = _wordUsageWrapperFactory.Create(CurrentWord.Entity);
                 newUsage.Text = Text;
                 newUsage.Translation = Translation;
 

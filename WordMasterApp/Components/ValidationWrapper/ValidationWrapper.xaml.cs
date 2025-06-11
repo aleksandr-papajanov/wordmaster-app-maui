@@ -2,7 +2,7 @@ using ReactiveUI;
 using System.ComponentModel;
 using System.Reactive.Linq;
 
-namespace WordMasterApp.Components;
+namespace WordMasterApp.Components.ValidationWrapper;
 
 public partial class ValidationWrapper : ContentView, INotifyPropertyChanged
 {

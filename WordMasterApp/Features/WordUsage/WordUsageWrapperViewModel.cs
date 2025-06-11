@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
 using WordMaster.Data.Models;
-using WordMaster.Data.Services;
+using WordMaster.Data.Services.Interfaces;
 
 namespace WordMaster.Data.ViewModels
 {

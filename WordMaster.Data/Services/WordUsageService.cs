@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using WordMaster.Data.Infrastructure;
 using WordMaster.Data.Models;
+using WordMaster.Data.Services.Interfaces;
 
 namespace WordMaster.Data.Services
 {
@@ -19,24 +20,16 @@ namespace WordMaster.Data.Services
             _repository = repository;
         }
         
-        public IObservable<IChangeSet<WordUsage>> GetStream(IObservable<Word> word, IObservable<string> filter)
+        public IObservable<IChangeSet<WordUsage>> GetStream(Guid wordId, string filter)
         {
-            return word
-                .CombineLatest(filter, (word, filter) => (word, filter))
-                .Select(args =>
-                {
-                     var (word, filter) = args;
+            var filteredWordsQuery = _repository.All
+                .Where(e => e.WordId == wordId)
+                .Where(e => e.Text.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                            e.Translation.Contains(filter, StringComparison.OrdinalIgnoreCase));
 
-                     var filteredWordsQuery = _repository.All
-                         .Where(e => e.WordId == word.Id)
-                         .Where(e => e.Text.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-                                     e.Translation.Contains(filter, StringComparison.OrdinalIgnoreCase));
-
-                     return filteredWordsQuery
-                        .AsRealmCollection()
-                        .ToObservableChangeSet<IRealmCollection<WordUsage>, WordUsage>();
-                })
-                .Switch();
+            return filteredWordsQuery
+                .AsRealmCollection()
+                .ToObservableChangeSet<IRealmCollection<WordUsage>, WordUsage>();
         }
 
         public async Task CreateAsync(WordUsage entity)

@@ -8,7 +8,7 @@ namespace WordMasterApp
         {
             InitializeComponent();
 
-            Routing.RegisterRoute(nameof(WordDetailsPage), typeof(WordDetailsPage));
+            //Routing.RegisterRoute(nameof(WordDetails), typeof(WordDetailsPage));
         }
     }
 }

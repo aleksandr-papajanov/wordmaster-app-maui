@@ -1,5 +1,5 @@
 ﻿using WordMaster.Data.Models;
-using WordMaster.Data.Services;
+using WordMaster.Data.Services.Interfaces;
 using WordMaster.Data.ViewModels;
 using WordMasterApp.Features;
 
@@ -8,7 +8,7 @@ namespace WordMasterApp.DIFactories
     public interface IWordWrapperViewModelDIFactory
     {
         WordWrapperViewModel Create(Word entity);
-        WordWrapperViewModel Create();
+        WordWrapperViewModel Create(Deck deck);
     }
 
     public class WordWrapperViewModelDIFactory : IWordWrapperViewModelDIFactory
@@ -22,12 +22,22 @@ namespace WordMasterApp.DIFactories
 
         public WordWrapperViewModel Create(Word entity)
         {
+            if (!entity.IsManaged)
+            {
+                throw new InvalidOperationException("Cannot create a WordWrapperViewModel for an unmanaged Word entity.");
+            }
+
             return new WordWrapperViewModel(entity, _service);
         }
         
-        public WordWrapperViewModel Create()
+        public WordWrapperViewModel Create(Deck entity)
         {
-            return new WordWrapperViewModel(_service);
+            if (!entity.IsManaged)
+            {
+                throw new InvalidOperationException("Cannot create a WordWrapperViewModel for an unmanaged Deck entity.");
+            }
+
+            return new WordWrapperViewModel(entity, _service);
         }
     }
 }
