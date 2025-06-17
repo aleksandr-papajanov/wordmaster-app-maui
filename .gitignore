@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/WordMaster.Data/WordMaster.Data.csproj
+/WordMaster.Secrets/WordMaster.Secrets.csproj
+/WordMaster.Secrets/WordMaster.Secrets.csproj
