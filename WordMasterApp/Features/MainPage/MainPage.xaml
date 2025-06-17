@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:WordMasterApp.Features.MainPage"
              xmlns:decklist="clr-namespace:WordMasterApp.Features.DeckList"
+             xmlns:messagecontainer="clr-namespace:WordMasterApp.Features.MessageContainer"
              x:Class="WordMasterApp.Features.MainPage.MainPage"
              Title="MainPage">
 
@@ -29,11 +30,13 @@
         </VisualStateGroup>
     </VisualStateManager.VisualStateGroups>
 
-    <Grid>
+    <AbsoluteLayout>
         <Grid x:Name="DesktopLayout"
-              ColumnDefinitions="1*,4*"
-              RowDefinitions="*,Auto"
-              IsVisible="False">
+                ColumnDefinitions="1*,4*"
+                RowDefinitions="*,Auto"
+                IsVisible="False"
+                AbsoluteLayout.LayoutFlags="All"
+                AbsoluteLayout.LayoutBounds="0,0,1,1">
             <ScrollView Grid.Column="0"
                         Grid.Row="0"
                         Padding="10"
@@ -43,8 +46,8 @@
             </ScrollView>
 
             <Grid Grid.Column="1"
-                  Grid.Row="0"
-                  ColumnDefinitions="*,*">
+                    Grid.Row="0"
+                    ColumnDefinitions="*,*">
                 <ScrollView Grid.Column="0"
                             Padding="10"
                             x:Name="Main">
@@ -64,16 +67,32 @@
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
                         HeightRequest="50"
-                        x:Name="Detail"
-                        Background="BlanchedAlmond">
+                        x:Name="Detail">
+
+                <Button Text="asdas"  Clicked="Button_Clicked"
+                        HorizontalOptions="Center" />
 
             </ScrollView>
+            
+
         </Grid>
 
+        
         <Grid x:Name="MobileLayout"
-              BackgroundColor="Aqua"
-              IsVisible="False">
-                
+                BackgroundColor="Aqua"
+                IsVisible="False"
+                AbsoluteLayout.LayoutFlags="All"
+                AbsoluteLayout.LayoutBounds="0,0,1,1">
         </Grid>
-    </Grid>
+
+
+        <ScrollView x:Name="MessageContainer"
+                    AbsoluteLayout.LayoutFlags="PositionProportional"
+                    AbsoluteLayout.LayoutBounds="0.5,0.1,AutoSize,AutoSize">
+            <messagecontainer:MessageContainer ViewModel="{Binding MessageContainer}" />
+        </ScrollView>
+
+    </AbsoluteLayout>
+
+ 
 </ContentPage>

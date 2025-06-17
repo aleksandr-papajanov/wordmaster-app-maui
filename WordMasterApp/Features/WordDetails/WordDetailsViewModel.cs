@@ -1,22 +1,25 @@
 ﻿using ReactiveUI;
-using ReactiveUI.Validation.Abstractions;
-using ReactiveUI.Validation.Contexts;
-using ReactiveUI.Validation.Extensions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using WordMaster.Data.Models;
-using WordMaster.Data.Services.Interfaces;
-using WordMaster.Data.ViewModels;
 using WordMasterApp.DIFactories;
+using WordMasterApp.EntityWrappers;
+using WordMasterApp.Features.MessageContainer;
 using WordMasterApp.Messages;
+using WordMasterApp.Services;
+using WordMasterApp.Services.Generation;
 
 namespace WordMasterApp.Features
 {
-    public partial class WordDetailsViewModel : ReactiveObject, IActivatableViewModel, IValidatableViewModel
+    public partial class WordDetailsViewModel : ReactiveObject, IActivatableViewModel
     {
-        private readonly ObservableAsPropertyHelper<WordWrapperViewModel?> _currentWord;
-        public WordWrapperViewModel? CurrentWord => _currentWord.Value;
+        private readonly IWordService _wordService;
+        private readonly IGenerationService _aiService;
+        private readonly IMessageService _messageService;
+        private readonly IWordUsageViewModelFactory _wordUsageFactory;
+
+        private readonly ObservableAsPropertyHelper<WordWrapper?> _currentWord;
+        public WordWrapper? CurrentWord => _currentWord.Value;
 
         private bool _hasTriedToUpdate = false;
         public bool HasTriedToUpdate
@@ -25,48 +28,35 @@ namespace WordMasterApp.Features
             private set => this.RaiseAndSetIfChanged(ref _hasTriedToUpdate, value);
         }
 
-        private string _text = string.Empty;
-        public string Text
-        {
-            get => _text;
-            set => this.RaiseAndSetIfChanged(ref _text, value);
-        }
-        
-        private string _translation = string.Empty;
-        public string Translation
-        {
-            get => _translation;
-            set => this.RaiseAndSetIfChanged(ref _translation, value);
-        }
-
-        private string _definition = string.Empty;
-        public string Definition
-        {
-            get => _definition;
-            set => this.RaiseAndSetIfChanged(ref _definition, value);
-        }
-
         // ViewModels
         public WordUsageViewViewModel WordUsageViewModel { get; }
 
         // Commands
         public ICommand UpdateCommand { get; private set; }
+        public ICommand AutoCompleteCommand { get; private set; }
 
-        // Implementing IValidatableViewModel
-        public IValidationContext ValidationContext { get; } = new ValidationContext();
 
         // Implementing IActivatableViewModel
         public ViewModelActivator Activator { get; } = new ViewModelActivator();
 
 
-        public WordDetailsViewModel(IObservable<WordWrapperViewModel?> word,
+        public WordDetailsViewModel(IObservable<WordWrapper?> word,
                                     IWordService wordService,
-                                    IWordUsageViewModelDIFactory wordUsageFactory)
+                                    IGenerationService aiService,
+                                    IMessageService messageService,
+                                    IWordUsageViewModelFactory wordUsageFactory)
         {
+            _wordService = wordService;
+            _aiService = aiService;
+            _messageService = messageService;
+            _wordUsageFactory = wordUsageFactory;
+
             word.ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, x => x.CurrentWord, out _currentWord);
 
-            SetupValidation();
+            //word.ObserveOn(RxApp.MainThreadScheduler)
+            //    .Subscribe(x => CurrentWord = x);
+
             SetupCommands();
 
             // important to create the view models in constructor for propper binding
@@ -76,64 +66,43 @@ namespace WordMasterApp.Features
             {
                 word.Subscribe(word =>
                 {
-                    if (word == null)
-                    {
-                        Text =
-                        Translation =
-                        Definition = string.Empty;
-                    }
-                    else
-                    {
-                        Text = word.Text;
-                        Translation = word.Translation;
-                        Definition = word.Definition;
-                    }
-
                     HasTriedToUpdate = false;
                 })
                 .DisposeWith(disposables);
             });
         }
 
-        private void SetupValidation()
-        {
-            this.ValidationRule(
-                vm => vm.Text,
-                text => !string.IsNullOrWhiteSpace(text),
-                "Word cannot be empty"
-            );
-
-            this.ValidationRule(
-                vm => vm.Translation,
-                text => !string.IsNullOrWhiteSpace(text),
-                "Translation cannot be empty"
-            );
-        }
 
         private void SetupCommands()
         {
             var word  = this.WhenAnyValue(x => x.CurrentWord).Select(x => x != null);
+            var isNew = this.WhenAnyValue(x => x.CurrentWord).Select(x => !(x == null || x.IsManaged));
             var tried = this.WhenAnyValue(x => x.HasTriedToUpdate);
-            var valid = ValidationContext.WhenAnyValue(x => x.IsValid);
+            var valid = this.WhenAnyValue(x => x.CurrentWord).Select(x => x != null ? x.IsValidChanged : Observable.Return(false)).Switch();
 
             var canUpdate = Observable.CombineLatest(word, tried, valid, (word, tried, valid) => word && (tried ? valid : true));
+            //var canComplete = Observable.CombineLatest(managed, (managed) => !managed);
 
             UpdateCommand = ReactiveCommand.CreateFromTask(UpdateWordAsync, canUpdate);
+            AutoCompleteCommand = ReactiveCommand.CreateFromTask(AutoCompleteAsync, isNew);
         }
 
+        private async Task AutoCompleteAsync()
+        {
+            if (CurrentWord == null)
+                return;
+
+            await CurrentWord.AutoCompleteAsync((message) => _messageService.Publish(message));
+        }
 
         private async Task UpdateWordAsync()
         {
             if (CurrentWord == null)
                 return;
 
-            if (ValidationContext.IsValid)
+            if (CurrentWord.IsValid)
             {
-                CurrentWord.Text = Text;
-                CurrentWord.Translation = Translation;
-                CurrentWord.Definition = Definition;
-
-                await CurrentWord.UpdateAsync();
+                await CurrentWord.SaveAsync();
 
                 if (CurrentWord.IsManaged)
                 {

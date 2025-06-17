@@ -6,12 +6,10 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Input;
-using WordMaster.Data.Models;
-using WordMaster.Data.Services.Interfaces;
-using WordMaster.Data.ViewModels;
 using WordMasterApp.DIFactories;
 using WordMasterApp.EntityWrappers;
 using WordMasterApp.Messages;
+using WordMasterApp.Services;
 
 
 namespace WordMasterApp.Features.WordList
@@ -19,19 +17,19 @@ namespace WordMasterApp.Features.WordList
     public class WordListViewViewModel : ReactiveObject, IActivatableViewModel
     {
         private readonly IWordService _wordService;
-        private readonly IWordWrapperViewModelDIFactory _wordWrapperFactory;
+        private readonly IWordWrapperFactory _wordWrapperFactory;
 
         private readonly BehaviorSubject<string> _searchTextSubject = new(string.Empty);
-        private readonly SourceList<WordWrapperViewModel> _staticItems = new();
+        private readonly SourceList<WordWrapper> _staticItems = new();
 
-        private readonly ObservableAsPropertyHelper<DeckWrapperViewModel?> _currentDeck;
-        public DeckWrapperViewModel? CurrentDeck => _currentDeck.Value;
+        private readonly ObservableAsPropertyHelper<DeckWrapper?> _currentDeck;
+        public DeckWrapper? CurrentDeck => _currentDeck.Value;
 
-        private ReadOnlyObservableCollection<WordWrapperViewModel> _words = null!;
-        public ReadOnlyObservableCollection<WordWrapperViewModel> Words => _words;
+        private ReadOnlyObservableCollection<WordWrapper> _words = null!;
+        public ReadOnlyObservableCollection<WordWrapper> Words => _words;
 
-        private WordWrapperViewModel? _selectedWord;
-        public WordWrapperViewModel? SelectedWord
+        private WordWrapper? _selectedWord;
+        public WordWrapper? SelectedWord
         {
             get => _selectedWord;
             set => this.RaiseAndSetIfChanged(ref _selectedWord, value);
@@ -45,7 +43,7 @@ namespace WordMasterApp.Features.WordList
         }
 
         // Is needed for "outside world" to observe changes
-        public IObservable<WordWrapperViewModel?> SelectedWordObservable
+        public IObservable<WordWrapper?> SelectedWordObservable
             => this.WhenAnyValue(vm => vm.SelectedWord);
                    //.Select(word => word != null && word.IsManaged ? word : null);
 
@@ -57,7 +55,7 @@ namespace WordMasterApp.Features.WordList
         public ViewModelActivator Activator { get; } = new ViewModelActivator();
 
 
-        public WordListViewViewModel(IObservable<DeckWrapperViewModel?> deck, IWordService wordService, IWordWrapperViewModelDIFactory wordWrapperFactory)
+        public WordListViewViewModel(IObservable<DeckWrapper?> deck, IWordService wordService, IWordWrapperFactory wordWrapperFactory)
         {
             _wordService = wordService;
             _wordWrapperFactory = wordWrapperFactory;
@@ -75,12 +73,12 @@ namespace WordMasterApp.Features.WordList
                     .Select(x => x.deck != null && x.deck.IsManaged
                         ? _wordService
                             .GetStream(x.deck.Id, x.filter)
-                            .Transform(x => _wordWrapperFactory.Create(x))
-                        : Observable.Return(ChangeSet<WordWrapperViewModel>.Empty))
+                        : Observable.Return(ChangeSet<WordWrapper>.Empty))
                     .Switch()
                     .MergeChangeSets(_staticItems.Connect())
-                        .Sort(SortExpressionComparer<WordWrapperViewModel>
-                            .Ascending(x => !x.IsManaged ? 0 : 1))
+                        .Sort(SortExpressionComparer<WordWrapper>
+                            .Ascending(x => !x.IsManaged ? 0 : 1)
+                            .ThenByDescending(x => x.CreatedAt))
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Bind(out _words)
                     .DisposeMany()
@@ -120,18 +118,19 @@ namespace WordMasterApp.Features.WordList
 
         private void SetupCommands()
         {
-            var deck = this.WhenAnyValue(x => x.CurrentDeck).Select(x => x != null);
-            var word = this.WhenAnyValue(x => x.SelectedWord).Select(x => x != null);
+            var deck    = this.WhenAnyValue(x => x.CurrentDeck).Select(x => x != null);
+            var word    = this.WhenAnyValue(x => x.SelectedWord).Select(x => x != null);
+            var managed = this.WhenAnyValue(x => x.SelectedWord).Select(x => x != null && x.IsManaged);
 
-            var canCreate = Observable.CombineLatest(deck, word, (deck, word) => deck);
-            var canDelete = Observable.CombineLatest(deck, word, (deck, word) => word);
+            var canCreate = Observable.CombineLatest(deck, word, managed, (deck, word, managed) => deck && (!word || managed));
+            var canDelete = Observable.CombineLatest(deck, word, managed, (deck, word, managed) => word);
 
-            SelectWordCommand = ReactiveCommand.Create<WordWrapperViewModel>(Select);
+            SelectWordCommand = ReactiveCommand.Create<WordWrapper>(Select);
             CreateWordCommand = ReactiveCommand.Create(CreateWord, canCreate);
             DeleteWordCommand = ReactiveCommand.CreateFromTask(DeleteWord, canDelete);
         }
 
-        private void Select(WordWrapperViewModel tapped)
+        private void Select(WordWrapper tapped)
         {
             if (SelectedWord != null && !SelectedWord.IsManaged)
             {
@@ -146,7 +145,7 @@ namespace WordMasterApp.Features.WordList
             if (CurrentDeck == null)
                 return;
 
-            var newWord = _wordWrapperFactory.Create(CurrentDeck.Entity);
+            var newWord = _wordWrapperFactory.CreateNew(CurrentDeck);
             _staticItems.Add(newWord);
             SelectedWord = newWord;
         }

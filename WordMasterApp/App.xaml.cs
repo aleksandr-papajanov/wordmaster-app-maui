@@ -1,25 +1,14 @@
-﻿using WordMaster.Data.Infrastructure;
+﻿using WordMasterApp.DataLayer;
 
 namespace WordMasterApp
 {
     public partial class App : Application
     {
-        public App(IServiceProvider provider)
+        public App(RealmDataContext context)
         {
             InitializeComponent();
 
-            Task.Run(async () =>
-            {
-                var seeder = provider.GetService<IDataSeeder>();
-
-                if (seeder != null)
-                {
-                    await seeder.SeedIfNeededAsync();
-                }
-            });
-
-            MainPage = new AppShell();
+            MainPage = new AppShell(context);
         }
-
     }
 }

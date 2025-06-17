@@ -1,5 +1,5 @@
 using Microsoft.Maui.Controls;
-using WordMaster.Data.ViewModels;
+using WordMasterApp.EntityWrappers;
 
 namespace WordMasterApp.Features.WordList
 {
@@ -11,7 +11,7 @@ namespace WordMasterApp.Features.WordList
         protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
         {
             // Check if the item is a new object
-            if (item is WordWrapperViewModel word && !word.IsManaged)
+            if (item is WordWrapper word && !word.IsManaged)
             {
                 return NewWordTemplate;
             }

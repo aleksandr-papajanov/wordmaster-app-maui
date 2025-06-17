@@ -4,12 +4,9 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:header="clr-namespace:WordMasterApp.Components.Header"
              xmlns:validation="clr-namespace:WordMasterApp.Components.ValidationWrapper"
-             xmlns:converters="clr-namespace:WordMasterApp.Converters"
              x:Class="WordMasterApp.Features.WordUsageView"
              x:Name="Root">
     <ContentView.Resources>
-        <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
-
         <Style x:Key="UsageItemStyle" TargetType="Border">
             <Setter Property="Padding" Value="16,12" />
             <Setter Property="StrokeShape" Value="RoundRectangle 8" />
@@ -34,17 +31,19 @@
         <!-- Header -->
         <header:Header Title="Examples in context">
             <header:Header.Buttons>
+                <header:HeaderButton Glyph="&#xf72b;"
+                                     Command="{Binding ViewModel.GenerateUsageCommand, Source={x:Reference Root}}" />
                 <header:HeaderButton Glyph="&#xf15b;"
                                      FontFamily="FontAwesomeRegular"
-                                     Command="{Binding ViewModel.CreateCommand, Source={x:Reference Root}}" />
+                                     Command="{Binding ViewModel.CreateUsageCommand, Source={x:Reference Root}}" />
                 <header:HeaderButton Glyph="&#xf0c7;"
                                      FontFamily="FontAwesomeRegular"
-                                     Command="{Binding ViewModel.UpdateCommand, Source={x:Reference Root}}" />
+                                     Command="{Binding ViewModel.UpdateUsageCommand, Source={x:Reference Root}}" />
                 <header:HeaderButton Glyph="&#xf246;"
-                                     Command="{Binding ViewModel.EditCommand, Source={x:Reference Root}}"
+                                     Command="{Binding ViewModel.EditUsageCommand, Source={x:Reference Root}}"
                                      IsToggled="True" />
                 <header:HeaderButton Glyph="&#xf00d;"
-                                     Command="{Binding ViewModel.DeleteCommand, Source={x:Reference Root}}" />
+                                     Command="{Binding ViewModel.DeleteUsageCommand, Source={x:Reference Root}}" />
             </header:Header.Buttons>
         </header:Header>
 
@@ -71,7 +70,7 @@
 
 
 
-        <VerticalStackLayout IsVisible="{Binding IsEditFormVisible, Converter={StaticResource InverseBoolConverter}}">
+        <VerticalStackLayout IsVisible="{Binding IsEditFormVisible, Converter={toolkit:IsNotNullConverter}}">
             <!-- Search bar -->
             <SearchBar Placeholder="Search usages..."
                        Text="{Binding SearchText}"
@@ -107,7 +106,7 @@
                             </VerticalStackLayout>
 
                             <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding ViewModel.SelectCommand, Source={x:Reference Root}}"
+                                <TapGestureRecognizer Command="{Binding ViewModel.SelectUsageCommand, Source={x:Reference Root}}"
                               CommandParameter="{Binding .}" />
                             </Border.GestureRecognizers>
                         </Border>

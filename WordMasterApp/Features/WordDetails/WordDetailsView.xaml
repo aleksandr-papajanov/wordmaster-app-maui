@@ -1,33 +1,43 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:local="clr-namespace:WordMasterApp.Features"
              xmlns:header="clr-namespace:WordMasterApp.Components.Header"
              xmlns:validation="clr-namespace:WordMasterApp.Components.ValidationWrapper"
              x:Class="WordMasterApp.Features.WordDetails.WordDetailsView"
-             x:Name="This">
+             x:Name="Root">
+    <ContentView.Resources>
+        <Style x:Key="ThickLabel" TargetType="Label">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+    </ContentView.Resources>
 
     <VerticalStackLayout>
-        <StackLayout Spacing="16" VerticalOptions="Start">
+        <StackLayout Spacing="16" VerticalOptions="Start" IsEnabled="{Binding CurrentWord, Converter={toolkit:IsNotNullConverter}}">
             <header:Header Title="Details">
                 <header:Header.Buttons>
+                    <header:HeaderButton Glyph="&#xf72b;"
+                                         Command="{Binding BindingContext.AutoCompleteCommand, Source={x:Reference Root}}" />
                     <header:HeaderButton Glyph="&#xf0c7;"
-                             FontFamily="FontAwesomeRegular"
-                             Command="{Binding BindingContext.UpdateCommand, Source={x:Reference This}}" />
+                                         FontFamily="FontAwesomeRegular"
+                                         Command="{Binding BindingContext.UpdateCommand, Source={x:Reference Root}}" />
                 </header:Header.Buttons>
             </header:Header>
 
             <validation:ValidationWrapper x:Name="TextValidationWrapper"
                                           ValidationIsVisible="{Binding HasTriedToUpdate}">
                 <validation:ValidationWrapper.InnerContent>
-                    <Entry Text="{Binding Text}" Placeholder="Enter word" />
+                    <Entry Text="{Binding CurrentWord.Text}" Placeholder="Enter word" />
                 </validation:ValidationWrapper.InnerContent>
             </validation:ValidationWrapper>
 
             <validation:ValidationWrapper x:Name="TranslationValidationWrapper"
                                           ValidationIsVisible="{Binding HasTriedToUpdate}">
                 <validation:ValidationWrapper.InnerContent>
-                    <Entry Text="{Binding Translation}" Placeholder="Enter translation" />
+                    <Entry Text="{Binding CurrentWord.Translation}" Placeholder="Enter translation" />
                 </validation:ValidationWrapper.InnerContent>
             </validation:ValidationWrapper>
 
@@ -36,9 +46,43 @@
                 <validation:ValidationWrapper.InnerContent>
                     <Editor Placeholder="Enter definition"
                             HeightRequest="100"
-                            Text="{Binding Definition}" />
+                            Text="{Binding CurrentWord.Definition}" />
                 </validation:ValidationWrapper.InnerContent>
             </validation:ValidationWrapper>
+
+            <Grid ColumnDefinitions="Auto,*"
+                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                  ColumnSpacing="10"
+                  RowSpacing="5">
+                <Grid.Resources>
+                    <Style x:Key="HeaderLabelStyle" TargetType="Label">
+                        <Setter Property="FontSize" Value="10" />
+                        <Setter Property="VerticalTextAlignment" Value="End" />
+                    </Style>
+
+                    <Style x:Key="DataLabelStyle" TargetType="Label">
+                        <Setter Property="FontSize" Value="13" />
+                    </Style>
+                </Grid.Resources>
+
+                <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource HeaderLabelStyle}" Text="Pronunciation:" />
+                <Label Grid.Column="1" Grid.Row="0" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.Pronunciation}" />
+
+                <Label Grid.Column="0" Grid.Row="1" Style="{StaticResource HeaderLabelStyle}" Text="Part of speech:" />
+                <Label Grid.Column="1" Grid.Row="1" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.PartOfSpeechLabel}" />
+
+                <Label Grid.Column="0" Grid.Row="2" Style="{StaticResource HeaderLabelStyle}" Text="Category:" />
+                <Label Grid.Column="1" Grid.Row="2" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.PartOfSpeechType}" />
+
+                <Label Grid.Column="0" Grid.Row="3" Style="{StaticResource HeaderLabelStyle}" Text="Synonyms:" />
+                <Label Grid.Column="1" Grid.Row="3" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.Synonyms}" />
+
+                <Label Grid.Column="0" Grid.Row="4" Style="{StaticResource HeaderLabelStyle}" Text="Antonyms:" />
+                <Label Grid.Column="1" Grid.Row="4" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.Antonyms}" />
+
+                <Label Grid.Column="0" Grid.Row="5" Style="{StaticResource HeaderLabelStyle}" Text="Usage frequency:" />
+                <Label Grid.Column="1" Grid.Row="5" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.UsageFrequency}" />
+            </Grid>
 
             <!-- Word usages view -->
             <local:WordUsageView ViewModel="{Binding WordUsageViewModel}" />

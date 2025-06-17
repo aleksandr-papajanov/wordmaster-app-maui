@@ -1,12 +1,17 @@
 ﻿using CommunityToolkit.Maui;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using WordMaster.Data.Infrastructure;
-using WordMaster.Data.Services;
-using WordMaster.Data.Services.Interfaces;
+using OpenAI.Chat;
+using ReactiveUI;
+using WordMaster.AIClientProvider;
+using WordMasterApp.DataLayer;
 using WordMasterApp.DIFactories;
 using WordMasterApp.Features;
 using WordMasterApp.Features.MainPage;
+using WordMasterApp.Features.MessageContainer;
 using WordMasterApp.Features.WordDetails;
+using WordMasterApp.Services;
+using WordMasterApp.Services.Generation;
 
 namespace WordMasterApp
 {
@@ -16,26 +21,53 @@ namespace WordMasterApp
         {
             var builder = MauiApp.CreateBuilder();
 
-            // di factories
-            builder.Services.AddTransient<IDeckListViewModelDIFactory, DeckListViewModelDIFactory>(); // DeckListView
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
 
-            builder.Services.AddTransient<IWordListViewModelDIFactory, WordListViewModelDIFactory>(); // WordListView
-            builder.Services.AddTransient<IWordDetailsViewModelDIFactory, WordDetailsViewModelDIFactory>(); // WordDetailsView
-            builder.Services.AddTransient<IWordUsageViewModelDIFactory, WordUsageViewModelDIFactory>(); // WordUsageView
-            
-            builder.Services.AddTransient<IWordUsageWrapperViewModelDIFactory, WordUsageWrapperViewModelDIFactory>(); // wrapper for WordUsage
-            builder.Services.AddTransient<IWordWrapperViewModelDIFactory, WordWrapperViewModelDIFactory>(); // wrapper for Word
-            
+            builder.Configuration.AddConfiguration(configuration);
+
+            // Регистрируем конфигурацию как сервис
+            builder.Services.AddSingleton<IConfiguration>(configuration);
+
+            // di factories
+            builder.Services.AddTransient<IDeckListViewModelFactory, DeckListViewModelFactory>(); // DeckListView
+            builder.Services.AddTransient<IWordListViewModelFactory, WordListViewModelFactory>(); // WordListView
+            builder.Services.AddTransient<IWordDetailsViewModelFactory, WordDetailsViewModelFactory>(); // WordDetailsView
+            builder.Services.AddTransient<IWordUsageViewModelFactory, WordUsageViewModelFactory>(); // WordUsageView
+
+            builder.Services.AddTransient<IDeckWrapperFactory, DeckWrapperFactory>(); // wrapper for Deck
+            builder.Services.AddTransient<IWordWrapperFactory, WordWrapperFactory>(); // wrapper for Word
+            builder.Services.AddTransient<IWordUsageWrapperFactory, WordUsageWrapperFactory>(); // wrapper for WordUsage
 
             // data and services
-            builder.Services.AddTransient<IDataContext, RealmDataContext>();
-            builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-            builder.Services.AddTransient<IDataSeeder, DataSeeder>();
-            builder.Services.AddSingleton<IDeckService, DeckService>();
-            builder.Services.AddSingleton<IWordService, WordService>();
-            builder.Services.AddSingleton<IWordUsageService, WordUsageService>();
+            builder.Services.AddSingleton<RealmDataContext>();
+            builder.Services.AddTransient(typeof(IRepository<>), typeof(RealmRepository<>));
+            //builder.Services.AddTransient<IDataSeeder, DataSeeder>();
 
-            //components
+            builder.Services.AddSingleton<IDeckService, DeckService>();
+            builder.Services.AddTransient(provider => new Lazy<IDeckService>(() => provider.GetRequiredService<IDeckService>()));
+
+            builder.Services.AddSingleton<IWordService, WordService>();
+            builder.Services.AddTransient(provider => new Lazy<IWordService>(() => provider.GetRequiredService<IWordService>()));
+
+            builder.Services.AddSingleton<IWordUsageService, WordUsageService>();
+            builder.Services.AddTransient(provider => new Lazy<IWordUsageService>(() => provider.GetRequiredService<IWordUsageService>()));
+
+            builder.Services.AddSingleton<IGenerationService, GenerationService>();
+
+            // AI client provider
+            builder.Services.AddSingleton<IAIClientProvider, AIClientProvider>();
+            builder.Services.AddSingleton<ChatClient>(x =>
+            {
+                var provider = x.GetRequiredService<IAIClientProvider>();
+                var config = x.GetRequiredService<IConfiguration>();
+
+                var client = provider.CreateOpenAIClient();
+                var model = config["AppSettings:OpenAI:Model"] ?? throw new Exception("OpenAI model is not configured in appsettings.json");
+
+                return client.GetChatClient(model);
+            });
 
             // pages and viewmodels
             builder.Services.AddTransient<MainPage>();
@@ -46,12 +78,19 @@ namespace WordMasterApp
 
             builder.Services.AddTransient<WordUsageView>();
             builder.Services.AddTransient<WordUsageViewViewModel>();
-
             
+            builder.Services.AddTransient<MessageContainer>();
+            builder.Services.AddTransient<MessageContainerViewModel>();
+
+            builder.Services.AddSingleton<IMessageService, MessageService>();
+
 
             builder
                 .UseMauiApp<App>()
-                .UseMauiCommunityToolkit()
+                .UseMauiCommunityToolkit(options =>
+                {
+                    //options.SetShouldEnableSnackbarOnWindows(true);
+                })
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -63,7 +102,6 @@ namespace WordMasterApp
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
-
 
             return builder.Build();
         }

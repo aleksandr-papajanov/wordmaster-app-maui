@@ -1,6 +1,11 @@
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
 using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
+using ReactiveUI.Validation.Helpers;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using WordMasterApp.EntityWrappers;
 
 namespace WordMasterApp.Features.WordDetails;
 
@@ -32,15 +37,10 @@ public partial class WordDetailsView : ContentView, IViewFor<WordDetailsViewMode
         InitializeComponent();
         ViewModel = viewModel;
 
+        
         this.WhenActivated(disposables =>
         {
             this.OneWayBind(ViewModel, vm => vm, view => view.BindingContext)
-                .DisposeWith(disposables);
-
-            this.BindValidation(ViewModel, vm => vm.Text, v => v.TextValidationWrapper.ValidationMessage)
-                .DisposeWith(disposables);
-
-            this.BindValidation(ViewModel, vm => vm.Translation, v => v.TranslationValidationWrapper.ValidationMessage)
                 .DisposeWith(disposables);
         });
     }

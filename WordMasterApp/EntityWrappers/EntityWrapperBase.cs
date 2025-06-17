@@ -1,11 +1,5 @@
 ﻿using ReactiveUI;
 using Realms;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WordMaster.Data.Models;
 
 namespace WordMasterApp.EntityWrappers
 {
@@ -14,8 +8,8 @@ namespace WordMasterApp.EntityWrappers
     {
         protected readonly T _entity;
 
-        public T Entity => _entity;
         public bool IsManaged => _entity.IsManaged;
+
 
         protected EntityWrapperBase(T entity)
         {

@@ -4,35 +4,30 @@ using ReactiveUI;
 using ReactiveUI.Validation.Abstractions;
 using ReactiveUI.Validation.Contexts;
 using ReactiveUI.Validation.Extensions;
-using Realms;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Input;
-using WordMaster.Data.Models;
-using WordMaster.Data.Services.Interfaces;
-using WordMaster.Data.ViewModels;
 using WordMasterApp.DIFactories;
+using WordMasterApp.EntityWrappers;
+using WordMasterApp.Services;
+using WordMasterApp.Services.Generation;
 
 namespace WordMasterApp.Features
 {
     public class WordUsageViewViewModel : ReactiveObject, IValidatableViewModel, IActivatableViewModel
     {
-        private readonly IWordUsageWrapperViewModelDIFactory _wordUsageWrapperFactory;
+        private readonly IGenerationService _aiService;
+        private readonly IWordUsageWrapperFactory _usageWrapperFactory;
         private readonly BehaviorSubject<string> _searchTextSubject = new(string.Empty);
 
+        private readonly ObservableAsPropertyHelper<WordWrapper?> _currentWord;
+        public WordWrapper? CurrentWord => _currentWord.Value;
 
         // Main collection
-        private ReadOnlyObservableCollection<WordUsageWrapperViewModel> _usages;
-        public ReadOnlyObservableCollection<WordUsageWrapperViewModel> Usages => _usages;
-
-        private WordWrapperViewModel _currentWord;
-        public WordWrapperViewModel CurrentWord
-        {
-            get => _currentWord;
-            set => this.RaiseAndSetIfChanged(ref _currentWord, value);
-        }
+        private  ReadOnlyObservableCollection<WordUsageWrapper> _usages;
+        public ReadOnlyObservableCollection<WordUsageWrapper> Usages => _usages;
 
         // Search text binded to the UI entry field
         private string _searchText = string.Empty;
@@ -43,8 +38,8 @@ namespace WordMasterApp.Features
         }
 
         // Binded to SelectedItem of CollectionView
-        private WordUsageWrapperViewModel? _selectedUsage;
-        public WordUsageWrapperViewModel? SelectedUsage
+        private WordUsageWrapper? _selectedUsage;
+        public WordUsageWrapper? SelectedUsage
         {
             get => _selectedUsage;
             set => this.RaiseAndSetIfChanged(ref _selectedUsage, value);
@@ -81,16 +76,29 @@ namespace WordMasterApp.Features
         }
 
         // Commands
-        public ICommand CreateCommand { get; private set; }
-        public ICommand UpdateCommand { get; private set; }
-        public ICommand EditCommand { get; private set; }
-        public ICommand DeleteCommand { get; private set; }
-        public ICommand SelectCommand { get; private set; }
+        public ICommand GenerateUsageCommand { get; private set; }
+        public ICommand CreateUsageCommand { get; private set; }
+        public ICommand UpdateUsageCommand { get; private set; }
+        public ICommand EditUsageCommand { get; private set; }
+        public ICommand DeleteUsageCommand { get; private set; }
+        public ICommand SelectUsageCommand { get; private set; }
 
+        // Implementing IValidatableViewModel requires a ValidationContext property
+        public IValidationContext ValidationContext { get; } = new ValidationContext();
 
-        public WordUsageViewViewModel(IObservable<WordWrapperViewModel?> word, IWordUsageService service, IWordUsageWrapperViewModelDIFactory wordUsageWrapperFactory)
+        // Implementing IActivatableViewModel requires an Activator property
+        public ViewModelActivator Activator { get; } = new ViewModelActivator();
+
+        public WordUsageViewViewModel(IObservable<WordWrapper?> word,
+                                      IWordUsageService usageService,
+                                      IGenerationService aiService,
+                                      IWordUsageWrapperFactory wordUsageWrapperFactory)
         {
-            _wordUsageWrapperFactory = wordUsageWrapperFactory;
+            _aiService = aiService;
+            _usageWrapperFactory = wordUsageWrapperFactory;
+
+            word.ObserveOn(RxApp.MainThreadScheduler)
+                .ToProperty(this, x => x.CurrentWord, out _currentWord);
 
             SetupValidation();
             SetupCommands();
@@ -100,10 +108,10 @@ namespace WordMasterApp.Features
                 Observable
                     .CombineLatest(word, _searchTextSubject.AsObservable(), (word, filter) => (word, filter))
                     .Select(x => x.word == null
-                        ? Observable.Return(ChangeSet<WordUsage>.Empty)
-                        : service.GetStream(x.word.Id, x.filter))
+                        ? Observable.Return(ChangeSet<WordUsageWrapper>.Empty)
+                        : usageService.GetStream(x.word.Id, x.filter))
                     .Switch()
-                    .Transform(x => wordUsageWrapperFactory.Create(x))
+                    .Sort(SortExpressionComparer<WordUsageWrapper>.Descending(x => x.CreatedAt))
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Bind(out _usages)
                     .DisposeMany()
@@ -116,11 +124,6 @@ namespace WordMasterApp.Features
                     .DistinctUntilChanged()
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Subscribe(text => _searchTextSubject.OnNext(text))
-                    .DisposeWith(disposables);
-
-                word
-                    .ObserveOn(RxApp.MainThreadScheduler)
-                    .BindTo(this, x => x.CurrentWord)
                     .DisposeWith(disposables);
 
                 word
@@ -158,26 +161,55 @@ namespace WordMasterApp.Features
 
         private void SetupCommands()
         {
-            var word   = this.WhenAnyValue(x => x.CurrentWord).Select(x => x != null);
-            var usage  = this.WhenAnyValue(x => x.SelectedUsage).Select(x => x != null);
-            var valid  = this.WhenAnyValue(x => x.ValidationContext.IsValid);
-            var view   = this.WhenAnyValue(x => x.Mode, mode => mode == WordUsageViewMode.View);
-            var edit   = this.WhenAnyValue(x => x.Mode, mode => mode == WordUsageViewMode.Edit);
-            var create = this.WhenAnyValue(x => x.Mode, mode => mode == WordUsageViewMode.Create);
+            var word    = this.WhenAnyValue(x => x.CurrentWord).Select(x => x != null);
+            var managed = this.WhenAnyValue(x => x.CurrentWord).Select(x => x != null && x.IsManaged);
+            var usage   = this.WhenAnyValue(x => x.SelectedUsage).Select(x => x != null);
+            var valid   = this.WhenAnyValue(x => x.ValidationContext.IsValid);
+            var view    = this.WhenAnyValue(x => x.Mode, mode => mode == WordUsageViewMode.View);
+            var edit    = this.WhenAnyValue(x => x.Mode, mode => mode == WordUsageViewMode.Edit);
+            var create  = this.WhenAnyValue(x => x.Mode, mode => mode == WordUsageViewMode.Create);
 
-            var canCreate = Observable.CombineLatest(word, usage, valid, view, edit, create, (word, usage, valid, view, edit, create) => word && (view || create));
-            var canUpdate = Observable.CombineLatest(word, usage, valid, view, edit, create, (word, usage, valid, view, edit, create) => valid && ((usage && edit) || create));
-            var canEdit   = Observable.CombineLatest(word, usage, valid, view, edit, create, (word, usage, valid, view, edit, create) => usage && (view || edit));
-            var canDelete = Observable.CombineLatest(word, usage, valid, view, edit, create, (word, usage, valid, view, edit, create) => usage && view);
+            var canGen    = Observable.CombineLatest(word, managed, usage, valid, view, edit, create, (word, managed, usage, valid, view, edit, create) => managed && view);
+            var canCreate = Observable.CombineLatest(word, managed, usage, valid, view, edit, create, (word, managed, usage, valid, view, edit, create) => managed && (view || create));
+            var canUpdate = Observable.CombineLatest(word, managed, usage, valid, view, edit, create, (word, managed, usage, valid, view, edit, create) => valid && ((usage && edit) || create));
+            var canEdit   = Observable.CombineLatest(word, managed, usage, valid, view, edit, create, (word, managed, usage, valid, view, edit, create) => usage && (view || edit));
+            var canDelete = Observable.CombineLatest(word, managed, usage, valid, view, edit, create, (word, managed, usage, valid, view, edit, create) => usage && view);
 
-            CreateCommand = ReactiveCommand.Create(Create, canCreate);
-            UpdateCommand = ReactiveCommand.CreateFromTask(UpdateAsync, canUpdate);
-            EditCommand   = ReactiveCommand.Create(Edit, canEdit);
-            DeleteCommand = ReactiveCommand.CreateFromTask(DeleteAsync, canDelete);
-            SelectCommand = ReactiveCommand.Create<WordUsageWrapperViewModel>(OnUsageTapped);
+            GenerateUsageCommand = ReactiveCommand.CreateFromTask(GenerateUsageAsync, canGen);
+            CreateUsageCommand   = ReactiveCommand.Create(Create, canCreate);
+            UpdateUsageCommand   = ReactiveCommand.CreateFromTask(UpdateAsync, canUpdate);
+            EditUsageCommand     = ReactiveCommand.Create(Edit, canEdit);
+            DeleteUsageCommand   = ReactiveCommand.CreateFromTask(DeleteAsync, canDelete);
+            SelectUsageCommand   = ReactiveCommand.Create<WordUsageWrapper>(OnUsageTapped);
         }
 
 
+
+        private async Task GenerateUsageAsync()
+        {
+            if (CurrentWord == null)
+                return;
+
+            var request = new WordUsageGenerationRequest(
+                word: CurrentWord.Text,
+                translation: CurrentWord.Translation,
+                sourceLang: "Swedish",
+                targetLang: "Russian",
+                count: 1
+            );
+
+        //    var response = await _aiService.GenerateExamples(request);
+
+        //    foreach (var example in response.Examples)
+        //    {
+        //        var newUsage = _usageWrapperFactory.CreateNew(CurrentWord);
+
+        //        newUsage.Text = example.Key;
+        //        newUsage.Translation = example.Value;
+                
+        //        await newUsage.SaveAsync();
+        //    }
+        }
 
         private void Create()
         {
@@ -220,7 +252,8 @@ namespace WordMasterApp.Features
 
                 SelectedUsage.Text = Text;
                 SelectedUsage.Translation = Translation;
-                await SelectedUsage.UpdateAsync();
+                
+                await SelectedUsage.SaveAsync();
 
                 Text = string.Empty;
                 Translation = string.Empty;
@@ -232,11 +265,11 @@ namespace WordMasterApp.Features
                 if (CurrentWord == null)
                     return;
 
-                var newUsage = _wordUsageWrapperFactory.Create(CurrentWord.Entity);
+                var newUsage = _usageWrapperFactory.CreateNew(CurrentWord);
                 newUsage.Text = Text;
                 newUsage.Translation = Translation;
 
-                await newUsage.UpdateAsync();
+                await newUsage.SaveAsync();
                 
                 // Reset the form
                 Text = string.Empty;
@@ -253,23 +286,11 @@ namespace WordMasterApp.Features
             await SelectedUsage.DeleteAsync();
         }
 
-        private void OnUsageTapped(WordUsageWrapperViewModel tapped)
+        private void OnUsageTapped(WordUsageWrapper tapped)
         {
-            if (SelectedUsage == tapped)
-            {
-                SelectedUsage = null;
-            }
-            else
-            {
-                SelectedUsage = tapped;
-            }
+            SelectedUsage = SelectedUsage != tapped
+                ? tapped
+                : null;
         }
-
-
-        // Implementing IValidatableViewModel requires a ValidationContext property
-        public IValidationContext ValidationContext { get; } = new ValidationContext();
-
-        // Implementing IActivatableViewModel requires an Activator property
-        public ViewModelActivator Activator { get; } = new ViewModelActivator();
     }
 }

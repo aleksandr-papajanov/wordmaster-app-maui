@@ -4,8 +4,8 @@ using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using WordMaster.Data.Services.Interfaces;
 using WordMasterApp.EntityWrappers;
+using WordMasterApp.Services;
 
 namespace WordMasterApp.Features.DeckList
 {
@@ -13,11 +13,11 @@ namespace WordMasterApp.Features.DeckList
     {
         private readonly IDeckService _deckService;
 
-        private ReadOnlyObservableCollection<DeckWrapperViewModel> _decks = null!;
-        public ReadOnlyObservableCollection<DeckWrapperViewModel> Decks => _decks;
+        private ReadOnlyObservableCollection<DeckWrapper> _decks = null!;
+        public ReadOnlyObservableCollection<DeckWrapper> Decks => _decks;
 
-        private DeckWrapperViewModel? _selectedDeck;
-        public DeckWrapperViewModel? SelectedDeck
+        private DeckWrapper? _selectedDeck;
+        public DeckWrapper? SelectedDeck
         {
             get => _selectedDeck;
             set => this.RaiseAndSetIfChanged(ref _selectedDeck, value);
@@ -32,12 +32,12 @@ namespace WordMasterApp.Features.DeckList
         {
             _deckService = deckService;
 
-            SelectDeckCommand = ReactiveCommand.Create<DeckWrapperViewModel>(SelectDeck);
+            SelectDeckCommand = ReactiveCommand.Create<DeckWrapper>(SelectDeck);
 
             this.WhenActivated(disposables =>
             {
-                _deckService.GetChangeSet()
-                    .Transform(x => new DeckWrapperViewModel(x, deckService))
+                _deckService
+                    .GetStream()
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Bind(out _decks)
                     .DisposeMany()
@@ -50,7 +50,7 @@ namespace WordMasterApp.Features.DeckList
             
         }
 
-        private void SelectDeck(DeckWrapperViewModel tapped)
+        private void SelectDeck(DeckWrapper tapped)
             => SelectedDeck = SelectedDeck != tapped
                 ? tapped 
                 : null;

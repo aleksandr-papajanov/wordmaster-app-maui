@@ -1,6 +1,6 @@
-using ReactiveUI;
+﻿using ReactiveUI;
 using System.Reactive.Disposables;
-using WordMasterApp.Features.DeckList;
+using WordMasterApp.Features.MessageContainer;
 
 namespace WordMasterApp.Features.MainPage;
 
@@ -32,10 +32,24 @@ public partial class MainPage : ContentPage, IViewFor<MainViewModel>
         InitializeComponent();
         ViewModel = viewModel;
 
+        this.SizeChanged += (s, e) =>
+        {
+            MessageContainer.MaximumHeightRequest = 0.8 * Height;
+            MessageContainer.MaximumWidthRequest = 0.5 * Width;
+        };
+
         this.WhenActivated(disposables =>
         {
             this.OneWayBind(ViewModel, vm => vm, view => view.BindingContext)
                 .DisposeWith(disposables);
+
+            
+            
         });
+    }
+
+    private void Button_Clicked(object sender, EventArgs e)
+    {
+        
     }
 }

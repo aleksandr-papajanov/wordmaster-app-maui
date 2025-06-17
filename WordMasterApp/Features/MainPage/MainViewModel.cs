@@ -2,21 +2,22 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using WordMaster.Data.ViewModels;
 using WordMasterApp.DIFactories;
 using WordMasterApp.EntityWrappers;
+using WordMasterApp.Features.MessageContainer;
 using WordMasterApp.Features.WordList;
 
 namespace WordMasterApp.Features.MainPage
 {
     public class MainViewModel : ReactiveObject, IActivatableViewModel
     {
-        private readonly IDeckListViewModelDIFactory _deckListFactory;
-        private readonly IWordListViewModelDIFactory _wordListFactory;
-        private readonly IWordDetailsViewModelDIFactory _wordDetailsFactory;
+        private readonly IDeckListViewModelFactory _deckListFactory;
+        private readonly IWordListViewModelFactory _wordListFactory;
+        private readonly IWordDetailsViewModelFactory _wordDetailsFactory;
+        public readonly IMessageService _messageService;
 
-        private readonly Subject<DeckWrapperViewModel?> _deckSubject = new();
-        private readonly Subject<WordWrapperViewModel?> _wordSubject = new();
+        private readonly Subject<DeckWrapper?> _deckSubject = new();
+        private readonly Subject<WordWrapper?> _wordSubject = new();
 
         // Screen sections
         private ReactiveObject? _sidebarSection;
@@ -55,16 +56,22 @@ namespace WordMasterApp.Features.MainPage
             set => this.RaiseAndSetIfChanged(ref _wordDetails, value);
         }
 
+        public MessageContainerViewModel MessageContainer { get; }
+
         // Implementing IActivatableViewModel requires an Activator property
         public ViewModelActivator Activator { get; } = new ViewModelActivator();
 
-        public MainViewModel(IDeckListViewModelDIFactory deckListFactory,
-                             IWordListViewModelDIFactory wordListFactory,
-                             IWordDetailsViewModelDIFactory wordDetailsFactory)
+        public MainViewModel(IDeckListViewModelFactory deckListFactory,
+                             IWordListViewModelFactory wordListFactory,
+                             IWordDetailsViewModelFactory wordDetailsFactory,
+                             IMessageService messageService)
         {
             _deckListFactory = deckListFactory;
             _wordListFactory = wordListFactory;
             _wordDetailsFactory = wordDetailsFactory;
+            _messageService = messageService;
+
+            MessageContainer = new MessageContainerViewModel(_messageService);
 
             var deckListViewModel = deckListFactory.Create();
             SidebarSection = deckListViewModel;
