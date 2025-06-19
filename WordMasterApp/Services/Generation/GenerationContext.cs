@@ -12,7 +12,8 @@ namespace WordMasterApp.Services.Generation
         // IGenerationContext implementation
         public ChatClient Chat { get; }
         public List<ChatMessage> History { get; }
-        public bool IsComplete { get; set; }
+        public GenerationSessionResult? SessionResult { get; set; }
+        public string? ErrorMessage { get; set; }
 
         public GenerationContext(ChatClient chat)
         {

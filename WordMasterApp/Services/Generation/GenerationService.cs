@@ -9,12 +9,10 @@ namespace WordMasterApp.Services.Generation
     public class GenerationService : IGenerationService
     {
         private readonly ChatClient _client;
-        private readonly IMessageService _messageService;
 
-        public GenerationService(ChatClient client, IMessageService messageService)
+        public GenerationService(ChatClient client)
         {
             _client = client;
-            _messageService = messageService;
         }
         
         public IGenerationSession CompleteWordDetails(WordCompletionState request)
@@ -29,7 +27,7 @@ namespace WordMasterApp.Services.Generation
 
             var session = new GenerationSession(
                 context,
-                [ new RetryMiddleware(_messageService) ],
+                [ new RetryMiddleware() ],
                 [ new WordCompletionStage(), new WordDetailsCompletionStage() ]);
 
             return session;

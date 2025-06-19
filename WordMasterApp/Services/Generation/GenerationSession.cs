@@ -1,4 +1,8 @@
 ﻿using OpenAI.Chat;
+using ReactiveUI;
+using WordMasterApp.Components.LoadingStripe;
+using WordMasterApp.Features.MessageContainer;
+using WordMasterApp.Messages;
 
 namespace WordMasterApp.Services.Generation
 {
@@ -17,7 +21,7 @@ namespace WordMasterApp.Services.Generation
         public IGenerationContext Context { get; }
         
         public event Func<StageInteractionRequest, Task> OnInteractionRequested;
-        public event Func<IGenerationContextSnapshot, Task> OnSessionCompleted;
+        public event Func<IGenerationContextSnapshot, Task> OnComplete;
 
         public GenerationSession(IGenerationContext context, IEnumerable<IGenerationMiddleware> middlewares, IEnumerable<IGenerationStage> stages)
         {
@@ -35,6 +39,13 @@ namespace WordMasterApp.Services.Generation
                 "You are a language assistant. Always reply strictly following the provided JSON schema." +
                 "You help generate translations, definitions and examples for words." +
                 "Be concise and accurate."));
+
+            OnComplete += async (snapshot) =>
+            {
+                // Ensure the loading stripe is hidden when the session completes
+                MessageBus.Current.SendMessage(new LoadingStripeMessage(false));
+                await Task.CompletedTask;
+            };
         }
 
 
@@ -53,14 +64,21 @@ namespace WordMasterApp.Services.Generation
 
         public async Task RunAsync()
         {
-            while (_stages.Count > 0 && !Context.IsComplete)
+            MessageBus.Current.SendMessage(new LoadingStripeMessage(true, LoadingStripeType.HttpRequest));
+
+            while (_stages.Count > 0 && Context.SessionResult == null)
             {
                 var stage = _stages.Peek();
 
                 await ExecuteInMiddlewarePipeline(stage);
 
-                if (Context.IsComplete)
+                if (Context.SessionResult != null)
                 {
+                    if (OnComplete != null)
+                    {
+                        await OnComplete.Invoke(Context);
+                    }
+                    
                     return;
                 }
 
@@ -70,8 +88,13 @@ namespace WordMasterApp.Services.Generation
                     OnInteractionRequested?.Invoke(new StageInteractionRequest(stage.GetType().Name, this, Context));
                     await _completion.Task;
 
-                    if (Context.IsComplete)
+                    if (Context.SessionResult != null)
                     {
+                        if (OnComplete != null)
+                        {
+                            await OnComplete.Invoke(Context);
+                        }
+
                         return;
                     }
                 }
@@ -81,11 +104,11 @@ namespace WordMasterApp.Services.Generation
                 }
             }
 
-            Context.IsComplete = true;
+            Context.SessionResult = GenerationSessionResult.Success;
 
-            if (OnSessionCompleted != null)
+            if (OnComplete != null)
             {
-                await OnSessionCompleted.Invoke(Context);
+                await OnComplete.Invoke(Context);
             }
         }
 
@@ -116,7 +139,14 @@ namespace WordMasterApp.Services.Generation
                 .OnControllerActionAsync(GenerationSessionControllerAction.Cancel, Context);
 
             _stages.Clear();
-            Context.IsComplete = true;
+
+            Context.SessionResult = GenerationSessionResult.Cancelled;
+
+            if (OnComplete != null)
+            {
+                Context.SessionResult = GenerationSessionResult.Cancelled;
+                await OnComplete.Invoke(Context);
+            }
 
             // continue
             _completion?.TrySetResult();

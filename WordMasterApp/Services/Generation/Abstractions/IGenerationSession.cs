@@ -5,7 +5,7 @@ namespace WordMasterApp.Services.Generation
     public interface IGenerationSession
     {
         event Func<StageInteractionRequest, Task> OnInteractionRequested;
-        event Func<IGenerationContextSnapshot, Task> OnSessionCompleted;
+        event Func<IGenerationContextSnapshot, Task> OnComplete;
          
         IGenerationContext Context { get; }
         Task RunAsync();

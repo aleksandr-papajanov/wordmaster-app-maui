@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:WordMasterApp.Features.MainPage"
+             xmlns:loading="clr-namespace:WordMasterApp.Components.LoadingStripe"
              xmlns:decklist="clr-namespace:WordMasterApp.Features.DeckList"
              xmlns:messagecontainer="clr-namespace:WordMasterApp.Features.MessageContainer"
              x:Class="WordMasterApp.Features.MainPage.MainPage"
@@ -66,20 +67,18 @@
             <ScrollView Grid.Row="1"
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
-                        HeightRequest="50"
+                        HeightRequest="20"
                         x:Name="Detail">
 
-                <Button Text="asdas"  Clicked="Button_Clicked"
-                        HorizontalOptions="Center" />
+                <Button Text="Details Section"
+                            Clicked="Button_Clicked"
+                            HorizontalOptions="Center" />
 
             </ScrollView>
-            
-
         </Grid>
 
         
         <Grid x:Name="MobileLayout"
-                BackgroundColor="Aqua"
                 IsVisible="False"
                 AbsoluteLayout.LayoutFlags="All"
                 AbsoluteLayout.LayoutBounds="0,0,1,1">
@@ -91,6 +90,11 @@
                     AbsoluteLayout.LayoutBounds="0.5,0.1,AutoSize,AutoSize">
             <messagecontainer:MessageContainer ViewModel="{Binding MessageContainer}" />
         </ScrollView>
+
+        <loading:LoadingStripeView AbsoluteLayout.LayoutFlags="WidthProportional"
+                                   AbsoluteLayout.LayoutBounds="0,-6,1,12"
+                                   IsAnimating="{Binding IsLoadingStripeAnimating}"
+                                   Speed="8" />
 
     </AbsoluteLayout>
 

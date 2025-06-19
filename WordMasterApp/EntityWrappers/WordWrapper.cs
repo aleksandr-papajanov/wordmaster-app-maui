@@ -262,17 +262,24 @@ namespace WordMasterApp.EntityWrappers
                 }
             };
 
-            session.OnSessionCompleted += async context =>
+            session.OnComplete += async context =>
             {
-                Text              = context.Get<string>(WordCompletionKeys.Word);
-                Translation       = context.Get<string>(WordCompletionKeys.Translation);
-                Definition        = context.Get<string>(WordCompletionKeys.Definition);
-                Pronunciation     = context.Get<string>(WordCompletionKeys.Pronunciation);
-                PartOfSpeechLabel = context.Get<string>(WordCompletionKeys.PartOfSpeechLabel);
-                PartOfSpeechType  = context.Get<PartOfSpeech>(WordCompletionKeys.PartOfSpeechType);
-                Synonyms          = string.Join(", ", context.Get<IEnumerable<string>>(WordCompletionKeys.Synonyms));
-                Antonyms          = string.Join(", ", context.Get<IEnumerable<string>>(WordCompletionKeys.Antonyms));
-                UsageFrequency    = context.Get<WordUsageFrequenсy>(WordCompletionKeys.UsageFrequency);
+                if (context.SessionResult == GenerationSessionResult.Error)
+                {
+                    publishMessage(new ErrorMessage(context.ErrorMessage ?? "An error occurred during word completion."));
+                }
+                else if (context.SessionResult == GenerationSessionResult.Success)
+                { 
+                    Text              = context.Get<string>(WordCompletionKeys.Word);
+                    Translation       = context.Get<string>(WordCompletionKeys.Translation);
+                    Definition        = context.Get<string>(WordCompletionKeys.Definition);
+                    Pronunciation     = context.Get<string>(WordCompletionKeys.Pronunciation);
+                    PartOfSpeechLabel = context.Get<string>(WordCompletionKeys.PartOfSpeechLabel);
+                    PartOfSpeechType  = context.Get<PartOfSpeech>(WordCompletionKeys.PartOfSpeechType);
+                    Synonyms          = string.Join(", ", context.Get<IEnumerable<string>>(WordCompletionKeys.Synonyms));
+                    Antonyms          = string.Join(", ", context.Get<IEnumerable<string>>(WordCompletionKeys.Antonyms));
+                    UsageFrequency    = context.Get<WordUsageFrequenсy>(WordCompletionKeys.UsageFrequency);
+                }
 
                 await Task.CompletedTask;
             };

@@ -9,7 +9,8 @@ namespace WordMasterApp.Services.Generation
 {
     public interface IGenerationContextSnapshot
     {
-        bool IsComplete { get; set; }
+        GenerationSessionResult? SessionResult { get; set; }
+        string? ErrorMessage { get; set; }
         T Get<T>(string key);
     }
 }

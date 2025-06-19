@@ -6,6 +6,7 @@ using WordMasterApp.DIFactories;
 using WordMasterApp.EntityWrappers;
 using WordMasterApp.Features.MessageContainer;
 using WordMasterApp.Features.WordList;
+using WordMasterApp.Messages;
 
 namespace WordMasterApp.Features.MainPage
 {
@@ -39,6 +40,13 @@ namespace WordMasterApp.Features.MainPage
         {
             get => _detailsSection;
             set => this.RaiseAndSetIfChanged(ref _detailsSection, value);
+        }
+        
+        private bool _isLoadingStripeAnimating;
+        public bool IsLoadingStripeAnimating
+        {
+            get => _isLoadingStripeAnimating;
+            set => this.RaiseAndSetIfChanged(ref _isLoadingStripeAnimating, value);
         }
 
         // ViewModels
@@ -138,6 +146,14 @@ namespace WordMasterApp.Features.MainPage
                             DetailsSection = WordDetails;
                         }
                     });
+
+                MessageBus.Current.Listen<LoadingStripeMessage>()
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Subscribe(message =>
+                    {
+                        IsLoadingStripeAnimating = message.IsAnimating;
+                    })
+                    .DisposeWith(disposables);
             });
             
             

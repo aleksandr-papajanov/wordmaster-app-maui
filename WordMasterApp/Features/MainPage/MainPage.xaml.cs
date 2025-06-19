@@ -1,6 +1,8 @@
 ﻿using ReactiveUI;
 using System.Reactive.Disposables;
+using WordMasterApp.Components.LoadingStripe;
 using WordMasterApp.Features.MessageContainer;
+using WordMasterApp.Messages;
 
 namespace WordMasterApp.Features.MainPage;
 
@@ -50,6 +52,6 @@ public partial class MainPage : ContentPage, IViewFor<MainViewModel>
 
     private void Button_Clicked(object sender, EventArgs e)
     {
-        
+        MessageBus.Current.SendMessage(new LoadingStripeMessage(true, LoadingStripeType.HttpRequest));
     }
 }
