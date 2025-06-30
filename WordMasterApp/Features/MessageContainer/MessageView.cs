@@ -1,7 +1,7 @@
-﻿using ReactiveUI;
-using System.Collections.Specialized;
+﻿using Microsoft.Maui.Controls.Shapes;
+using ReactiveUI;
 using System.Reactive.Disposables;
-using WordMasterApp.Features.MessageContainer;
+using WordMasterApp.Helpers;
 
 namespace WordMasterApp.Features.MessageContainer;
 
@@ -43,36 +43,13 @@ public class MessageView : ContentView, IViewFor<IMessageModel>
         });
     }
 
-    private Color GetColor(string name)
-    {
-        if (Application.Current == null)
-        {
-            return Colors.Transparent;
-        }
-
-        return Application.Current.RequestedTheme switch
-        {
-            AppTheme.Dark => Application.Current.Resources[name + "Dark"] is Color dark ? dark : Colors.Red,
-            AppTheme.Light => Application.Current.Resources[name + "Light"] is Color light ? light : Colors.Red,
-            _ => Colors.Transparent
-        };
-    }
-
     private View BuildMessage(IMessageModel msg)
     {
-        var primaryColor = msg switch
+        var frame = new Border
         {
-            NotificationMessage nm => GetColor("Primary"),
-            ConfirmationMessage cm => GetColor("Secondary"),
-            ErrorMessage em => GetColor("Error"),
-            _ => GetColor("Primary")
-        };
-
-        var frame = new Frame
-        {
-            CornerRadius = 20,
+            StrokeShape = new RoundRectangle { CornerRadius = 20 },
             Padding = 10,
-            BackgroundColor = primaryColor
+            BackgroundColor = msg.PrimaryColor
         };
 
         var stack = new VerticalStackLayout
@@ -96,17 +73,18 @@ public class MessageView : ContentView, IViewFor<IMessageModel>
 
         if (!string.IsNullOrWhiteSpace(msg.Title))
         {
-            var header = new Frame
+            var header = new Border
             {
-                BackgroundColor = GetColor("Text"),
+                BackgroundColor = ThemeExtentions.GetColor("Text"),
                 Padding = 5,
-                CornerRadius = 10,
+                StrokeShape = new RoundRectangle { CornerRadius = 10 },
                 HorizontalOptions = LayoutOptions.Start,
                 Content = new Label
                 {
                     Text = msg.Title,
+                    TextColor = msg.PrimaryColor,
                     FontAttributes = FontAttributes.Bold,
-                    TextColor = primaryColor,
+                    Style = Application.Current?.Resources["LabelRegular"] as Style
                 }
             };
 
@@ -120,7 +98,11 @@ public class MessageView : ContentView, IViewFor<IMessageModel>
 
         if (!string.IsNullOrWhiteSpace(msg.Message))
         {
-            contentStack.Children.Add(new Label { Text = msg.Message });
+            contentStack.Children.Add(new Label
+            {
+                Text = msg.Message,
+                Style = Application.Current?.Resources["LabelRegular"] as Style
+            });
         }
 
         if (msg.ExtraContent is View view)

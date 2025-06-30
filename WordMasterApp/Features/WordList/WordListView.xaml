@@ -26,7 +26,8 @@
     </ContentView.Resources>
 
     <VerticalStackLayout>
-        <header:Header Title="Words in deck">
+        <header:Header Title="Words in deck"
+                       Subtitle="Swedish to Russian">
             <header:Header.Buttons>
                 <header:HeaderButton Glyph="&#xf15b;"
                                      FontFamily="FontAwesomeRegular"
@@ -38,8 +39,7 @@
 
         <!-- Search bar -->
         <SearchBar Placeholder="Search usages..."
-                   Text="{Binding SearchText}"
-                   Margin="16,12" />
+                   Text="{Binding SearchText}" />
 
         <!-- Main word collection-->
         <CollectionView ItemsSource="{Binding Words}"
@@ -98,12 +98,12 @@
             <CollectionView.EmptyView>
                 <VerticalStackLayout Spacing="8"
                                      Padding="24">
-                    <Label Text="No words found"
-                           FontSize="18"
-                           HorizontalOptions="Center" />
-                    <Label Text="Try adjusting your search or add new usages"
-                           FontSize="12"
-                           HorizontalOptions="Center" />
+                    <Label HorizontalOptions="Center"
+                           Text="No words found"
+                           Style="{StaticResource LabelH3}" />
+                    <Label HorizontalOptions="Center"
+                           Text="Try adjusting your search or add new usages"
+                           Style="{StaticResource LabelCaption}" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
         </CollectionView>

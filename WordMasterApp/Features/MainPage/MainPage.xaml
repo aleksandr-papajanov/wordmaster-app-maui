@@ -92,10 +92,10 @@
         </ScrollView>
 
         <loading:LoadingStripeView AbsoluteLayout.LayoutFlags="WidthProportional"
-                                   AbsoluteLayout.LayoutBounds="0,-6,1,12"
+                                   AbsoluteLayout.LayoutBounds="0,0,1,20"
                                    IsAnimating="{Binding IsLoadingStripeAnimating}"
-                                   Speed="8" />
-
+                                   StripeType="{Binding LoadingStripeType}"
+                                   Alignment="Top" />
     </AbsoluteLayout>
 
  

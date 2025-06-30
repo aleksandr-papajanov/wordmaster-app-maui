@@ -8,11 +8,12 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
-                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Basics.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Controls.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <converters:IsEqualToBoolConverter x:Key="IsEqualToBoolConverter" />
+            <converters:EnumToProgressConverter x:Key="EnumToProgressConverter" />
         </ResourceDictionary>
     </Application.Resources>
 

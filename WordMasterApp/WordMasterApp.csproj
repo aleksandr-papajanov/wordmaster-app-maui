@@ -154,6 +154,9 @@
 	  <MauiXaml Update="Features\WordDetails\WordDetailsView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Controls.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -208,6 +211,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Services\Generation\DTOs\" />
+	  <ProjectReference Include="..\WordMaster.Data\WordMaster.Data.csproj" />
+	  <ProjectReference Include="..\WordMaster.Generation\WordMaster.Generation.csproj" />
 	</ItemGroup>
 </Project>

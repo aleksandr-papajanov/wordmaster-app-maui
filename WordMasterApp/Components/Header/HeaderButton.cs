@@ -39,44 +39,7 @@ public class HeaderButton : BindableObject
         get => (object)GetValue(CommandParameterProperty);
         set => SetValue(CommandParameterProperty, value);
     }
-
-    // New properties for toggle functionality
-    public static readonly BindableProperty IsToggledProperty =
-        BindableProperty.Create(nameof(IsToggled), typeof(bool), typeof(HeaderButton), false, propertyChanged: OnIsToggledChanged);
-
-    public static readonly BindableProperty ToggledCommandProperty =
-        BindableProperty.Create(nameof(ToggledCommand), typeof(ICommand), typeof(HeaderButton), null);
-
-    public bool IsToggled
-    {
-        get => (bool)GetValue(IsToggledProperty);
-        set => SetValue(IsToggledProperty, value);
-    }
-
-    public ICommand ToggledCommand
-    {
-        get => (ICommand)GetValue(ToggledCommandProperty);
-        set => SetValue(ToggledCommandProperty, value);
-    }
-
     
-
-    // Handle toggle state changes
-    private static void OnIsToggledChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        if (bindable is HeaderButton headerButton && newValue is bool isToggled)
-        {
-            // Update the glyph dynamically
-            headerButton.OnPropertyChanged(nameof(Glyph));
-
-            // Execute the ToggledCommand if set
-            if (headerButton.ToggledCommand?.CanExecute(isToggled) == true)
-            {
-                headerButton.ToggledCommand.Execute(isToggled);
-            }
-        }
-    }
-
     public HeaderButton()
     {
     }

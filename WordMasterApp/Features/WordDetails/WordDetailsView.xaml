@@ -3,19 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:local="clr-namespace:WordMasterApp.Features"
+             xmlns:components="clr-namespace:WordMasterApp.Components"
              xmlns:header="clr-namespace:WordMasterApp.Components.Header"
              xmlns:validation="clr-namespace:WordMasterApp.Components.ValidationWrapper"
              x:Class="WordMasterApp.Features.WordDetails.WordDetailsView"
              x:Name="Root">
-    <ContentView.Resources>
-        <Style x:Key="ThickLabel" TargetType="Label">
-            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}" />
-            <Setter Property="Padding" Value="8" />
-            <Setter Property="FontSize" Value="13" />
-        </Style>
-    </ContentView.Resources>
-
     <VerticalStackLayout>
+        
+        
         <StackLayout Spacing="16" VerticalOptions="Start" IsEnabled="{Binding CurrentWord, Converter={toolkit:IsNotNullConverter}}">
             <header:Header Title="Details">
                 <header:Header.Buttons>
@@ -27,12 +22,47 @@
                 </header:Header.Buttons>
             </header:Header>
 
-            <validation:ValidationWrapper x:Name="TextValidationWrapper"
-                                          ValidationIsVisible="{Binding HasTriedToUpdate}">
+            <validation:ValidationWrapper  Grid.Column="0" x:Name="TextValidationWrapper"
+                                              ValidationIsVisible="{Binding HasTriedToUpdate}">
                 <validation:ValidationWrapper.InnerContent>
-                    <Entry Text="{Binding CurrentWord.Text}" Placeholder="Enter word" />
+                    <Entry Placeholder="Enter word"
+                               Text="{Binding CurrentWord.Text}" />
                 </validation:ValidationWrapper.InnerContent>
             </validation:ValidationWrapper>
+
+
+
+            <Grid ColumnDefinitions="*,*,*" HorizontalOptions="Fill" ColumnSpacing="10">
+                <Border Grid.Column="0"
+                        Style="{StaticResource BorderBase}">
+                    <VerticalStackLayout>
+                        <Label Style="{StaticResource LabelSubcaption}"
+                               Text="Part of speech" />
+                        <Label Style="{StaticResource LabelRegular}"
+                               Text="{Binding CurrentWord.PartOfSpeechLabel}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1"
+                        Style="{StaticResource BorderBase}">
+                    <VerticalStackLayout>
+                        <Label Style="{StaticResource LabelSubcaption}"
+                               Text="Pronunciation" />
+                        <Label Style="{StaticResource LabelRegular}"
+                               Text="{Binding CurrentWord.Pronunciation}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2"
+                        Style="{StaticResource BorderBase}">
+                    <VerticalStackLayout>
+                        <Label 
+                               Style="{StaticResource LabelSubcaption}" Text="Usage frequency" />
+
+                        <components:SegmentedProgressBar Margin="0,4,0,0"
+                                                         Segments="5"
+                                                         Progress="{Binding CurrentWord.UsageFrequency, Converter={StaticResource EnumToProgressConverter}}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
 
             <validation:ValidationWrapper x:Name="TranslationValidationWrapper"
                                           ValidationIsVisible="{Binding HasTriedToUpdate}">
@@ -50,38 +80,56 @@
                 </validation:ValidationWrapper.InnerContent>
             </validation:ValidationWrapper>
 
-            <Grid ColumnDefinitions="Auto,*"
-                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+
+
+            <Grid ColumnDefinitions="*,*"
+                  RowDefinitions="Auto,*"
                   ColumnSpacing="10"
                   RowSpacing="5">
-                <Grid.Resources>
-                    <Style x:Key="HeaderLabelStyle" TargetType="Label">
-                        <Setter Property="FontSize" Value="10" />
-                        <Setter Property="VerticalTextAlignment" Value="End" />
-                    </Style>
 
-                    <Style x:Key="DataLabelStyle" TargetType="Label">
-                        <Setter Property="FontSize" Value="13" />
-                    </Style>
-                </Grid.Resources>
+                <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource LabelSubcaption}" Text="Synonyms:" />
+                <Label Grid.Column="1" Grid.Row="0" Style="{StaticResource LabelSubcaption}" Text="Antonyms:" />
 
-                <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource HeaderLabelStyle}" Text="Pronunciation:" />
-                <Label Grid.Column="1" Grid.Row="0" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.Pronunciation}" />
+                <FlexLayout Grid.Column="0" Grid.Row="1"
+                            Direction="Row"
+                            Wrap="Wrap"
+                            AlignItems="Start"
+                            AlignContent="Start"
+                            BindableLayout.ItemsSource="{Binding Synonyms}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <Label Style="{StaticResource LabelRegularLink}"
+                                   Margin="0,0,4,0"
+                                   Text="{Binding Text}">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ViewModel.ExplainRelatedWordCommand, Source={x:Reference Root}}"
+                                                          CommandParameter="{Binding .}" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
 
-                <Label Grid.Column="0" Grid.Row="1" Style="{StaticResource HeaderLabelStyle}" Text="Part of speech:" />
-                <Label Grid.Column="1" Grid.Row="1" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.PartOfSpeechLabel}" />
+                <FlexLayout Grid.Column="1" Grid.Row="1"
+                            Direction="Row"
+                            Wrap="Wrap"
+                            AlignItems="Start"
+                            AlignContent="Start"
+                            BindableLayout.ItemsSource="{Binding Antonyms}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <Label Style="{StaticResource LabelRegularLink}"
+                                   Margin="0,0,4,0"
+                                   Text="{Binding Text}">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ViewModel.ExplainRelatedWordCommand, Source={x:Reference Root}}"
+                                                          CommandParameter="{Binding .}" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
 
-                <Label Grid.Column="0" Grid.Row="2" Style="{StaticResource HeaderLabelStyle}" Text="Category:" />
-                <Label Grid.Column="1" Grid.Row="2" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.PartOfSpeechType}" />
-
-                <Label Grid.Column="0" Grid.Row="3" Style="{StaticResource HeaderLabelStyle}" Text="Synonyms:" />
-                <Label Grid.Column="1" Grid.Row="3" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.Synonyms}" />
-
-                <Label Grid.Column="0" Grid.Row="4" Style="{StaticResource HeaderLabelStyle}" Text="Antonyms:" />
-                <Label Grid.Column="1" Grid.Row="4" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.Antonyms}" />
-
-                <Label Grid.Column="0" Grid.Row="5" Style="{StaticResource HeaderLabelStyle}" Text="Usage frequency:" />
-                <Label Grid.Column="1" Grid.Row="5" Style="{StaticResource DataLabelStyle}" Text="{Binding CurrentWord.UsageFrequency}" />
             </Grid>
 
             <!-- Word usages view -->

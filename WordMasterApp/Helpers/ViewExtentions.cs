@@ -8,28 +8,16 @@ namespace WordMasterApp.Helpers
 {
     public static class ViewExtentions
     {
-        public static Color GetThemeColor(this View view, string resourceKeyBase)
+        public static Color ColorLerp(this Color start, Color end, float t)
         {
-            if (Application.Current == null)
-            {
-                return Colors.Transparent;
-            }
+            t = Math.Clamp(t, 0f, 1f);
 
-            var theme = Application.Current.RequestedTheme;
-            var themeKey = theme == AppTheme.Dark ? $"{resourceKeyBase}Dark" : $"{resourceKeyBase}Light";
+            float r = start.Red + (end.Red - start.Red) * t;
+            float g = start.Green + (end.Green - start.Green) * t;
+            float b = start.Blue + (end.Blue - start.Blue) * t;
+            float a = start.Alpha + (end.Alpha - start.Alpha) * t;
 
-            if (Application.Current.Resources.TryGetValue(themeKey, out var colorObj) && colorObj is Color color)
-            {
-                return color;
-            }
-
-            // just in case
-            if (Application.Current.Resources.TryGetValue(resourceKeyBase, out var fallbackObj) && fallbackObj is Color fallbackColor)
-            {
-                return fallbackColor;
-            }
-
-            return Colors.Transparent;
+            return new Color(r, g, b, a);
         }
     }
 }

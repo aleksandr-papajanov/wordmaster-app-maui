@@ -7,6 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMasterApp", "WordMaster
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMaster.AIClientProvider", "WordMaster.AIClientProvider\WordMaster.AIClientProvider.csproj", "{44C317D0-9431-279A-6223-A8B2F0F03F0B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMaster.Data", "WordMaster.Data\WordMaster.Data.csproj", "{120BF110-1D69-4852-A0EC-1B21EDCADCA9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMaster.Generation", "WordMaster.Generation\WordMaster.Generation.csproj", "{AF685233-781C-4846-B033-8CC864C0F659}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMaster.Common", "WordMaster.Common\WordMaster.Common.csproj", "{E275F833-3995-42B9-97B4-8F449C74D256}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +29,18 @@ Global
 		{44C317D0-9431-279A-6223-A8B2F0F03F0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44C317D0-9431-279A-6223-A8B2F0F03F0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44C317D0-9431-279A-6223-A8B2F0F03F0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{120BF110-1D69-4852-A0EC-1B21EDCADCA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{120BF110-1D69-4852-A0EC-1B21EDCADCA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{120BF110-1D69-4852-A0EC-1B21EDCADCA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{120BF110-1D69-4852-A0EC-1B21EDCADCA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF685233-781C-4846-B033-8CC864C0F659}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF685233-781C-4846-B033-8CC864C0F659}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF685233-781C-4846-B033-8CC864C0F659}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF685233-781C-4846-B033-8CC864C0F659}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E275F833-3995-42B9-97B4-8F449C74D256}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E275F833-3995-42B9-97B4-8F449C74D256}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E275F833-3995-42B9-97B4-8F449C74D256}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E275F833-3995-42B9-97B4-8F449C74D256}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

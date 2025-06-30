@@ -33,9 +33,9 @@ namespace WordMasterApp.Components.LoadingStripe
 
                     control.UpdateStripeColorsByType();
                 });
-
-        public static readonly BindableProperty SpeedProperty =
-            BindableProperty.Create(nameof(Speed), typeof(double), typeof(LoadingStripeView), 15.0,
+        
+        public static readonly BindableProperty AlignmentProperty =
+            BindableProperty.Create(nameof(Alignment), typeof(StripeAnimationAlignment), typeof(LoadingStripeView), StripeAnimationAlignment.Center,
                 propertyChanged: (bindable, _, newValue) =>
                 {
                     if (bindable is not LoadingStripeView control)
@@ -65,11 +65,11 @@ namespace WordMasterApp.Components.LoadingStripe
             get => (LoadingStripeType)GetValue(StripeTypeProperty);
             set => SetValue(StripeColorsProperty, value);
         }
-
-        public double Speed
+        
+        public StripeAnimationAlignment Alignment
         {
-            get => (double)GetValue(SpeedProperty);
-            set => SetValue(SpeedProperty, value);
+            get => (StripeAnimationAlignment)GetValue(AlignmentProperty);
+            set => SetValue(AlignmentProperty, value);
         }
 
         public bool IsAnimating
@@ -95,11 +95,14 @@ namespace WordMasterApp.Components.LoadingStripe
         {
             StripeColors = StripeType switch
             {
-                LoadingStripeType.HttpRequest => new List<Color> { this.GetThemeColor("Primary"), this.GetThemeColor("Secondary") },
+                LoadingStripeType.HttpRequest => new List<Color> { ThemeExtentions.GetColor("Primary"), ThemeExtentions.GetColor("Secondary"), ThemeExtentions.GetColor("PrimaryVariant"), ThemeExtentions.GetColor("Background") },
+                LoadingStripeType.UIInteraction => new List<Color> { ThemeExtentions.GetColor("SecondaryVariant"), ThemeExtentions.GetColor("SecondaryVariant"), ThemeExtentions.GetColor("Background") },
+                LoadingStripeType.Error => new List<Color> { ThemeExtentions.GetColor("Error"), ThemeExtentions.GetColor("Error"), ThemeExtentions.GetColor("Background") },
+                LoadingStripeType.Success => new List<Color> { ThemeExtentions.GetColor("Secondary"), ThemeExtentions.GetColor("Secondary"), ThemeExtentions.GetColor("Background") },
                 _ => new List<Color> { Colors.Transparent }
             };
 
-            _drawable.UpdateAnimations(StripeColors, Speed);
+            _drawable.UpdateAnimations(StripeColors, Alignment);
         }
 
 

@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:components="clr-namespace:WordMasterApp.Components">
+    
+    <!-- Page Styles -->
+    <Style TargetType="Page" ApplyToDerivedTypes="True">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}" />
+    </Style>
+
+    <!-- Label Styles -->
+    <Style TargetType="Label">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontRegular}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+    </Style>
+
+    <Style TargetType="Button">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontRegular}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+    </Style>
+
+    <Style TargetType="Entry">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontRegular}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+    </Style>
+
+    <Style TargetType="Editor">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontRegular}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+    </Style>
+
+    <Style TargetType="SearchBar">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontRegular}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+        <Setter Property="Margin" Value="30,20" />
+    </Style>
+
+
+    <Style TargetType="Label" x:Key="LabelH1">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontBold}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeH1}" />
+    </Style>
+
+    <Style TargetType="Label" x:Key="LabelH2">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontBold}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeH2}" />
+    </Style>
+    
+    <Style TargetType="Label" x:Key="LabelH3">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontBold}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeH3}" />
+    </Style>
+
+    <Style TargetType="Label" x:Key="LabelRegular">
+    </Style>
+
+    <Style TargetType="Label" x:Key="LabelCaption">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontLight}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
+    </Style>
+    
+    <Style TargetType="Label" x:Key="LabelSubcaption">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontLight}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSubcaption}" />
+    </Style>
+
+    <Style TargetType="Label"  x:Key="LabelRegularLink" BasedOn="{StaticResource LabelRegular}">
+        <Setter Property="TextDecorations" Value="Underline" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+
+                    <VisualState x:Name="PointerOver">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}" />
+                        </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="Opacity" Value="0.6" />
+                        </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor" Value="Gray" />
+                        </VisualState.Setters>
+                    </VisualState>
+
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
+    <!-- Border Styles -->
+    <Style TargetType="Border" x:Key="BorderBase">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+    </Style>
+
+    <!-- SegmentedProgressBar Styles -->
+    <Style TargetType="components:SegmentedProgressBar">
+        <Setter Property="StartColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+        <Setter Property="EndColor" Value="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}" />
+        <Setter Property="WidthRequest" Value="95" />
+        <Setter Property="HeightRequest" Value="18" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+    </Style>
+    
+    
+    <!--<Style TargetType="" x:Key="">
+        <Setter Property="" Value="" />
+        <Setter Property="" Value="" />
+        <Setter Property="" Value="" />
+        <Setter Property="" Value="" />
+    </Style>-->
+</ResourceDictionary>

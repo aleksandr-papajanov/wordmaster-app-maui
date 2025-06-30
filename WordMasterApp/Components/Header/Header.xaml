@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="WordMasterApp.Components.Header.Header"
              x:Name="Root">
 
@@ -52,16 +53,20 @@
         <Grid Grid.Row="0" 
               ColumnDefinitions="*,Auto" 
               Padding="16,8">
-            
-            <Label Grid.Column="0"
-                   VerticalOptions="Center"
-                   Text="{Binding Title, Source={x:Reference Root}}"
-                   FontSize="19"
-                   FontAttributes="Bold" />
+
+            <VerticalStackLayout Grid.Column="0"
+                                 VerticalOptions="Center">
+                <Label Text="{Binding Title, Source={x:Reference Root}}"
+                       Style="{StaticResource LabelH2}" />
+
+                <Label IsVisible="{Binding Subtitle, Source={x:Reference Root}, Converter={toolkit:IsStringNotNullOrWhiteSpaceConverter}}"
+                       Text="{Binding Subtitle, Source={x:Reference Root}}"
+                       Style="{StaticResource LabelCaption}" />
+            </VerticalStackLayout>
 
             <CollectionView Grid.Column="1"
-                          ItemsSource="{Binding Buttons, Source={x:Reference Root}}"
-                          ItemsLayout="HorizontalList">
+                            ItemsSource="{Binding Buttons, Source={x:Reference Root}}"
+                            ItemsLayout="HorizontalList">
                 <CollectionView.ItemTemplate>
                     <DataTemplate >
                         <Button x:Name="HeaderButton"

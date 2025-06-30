@@ -15,5 +15,6 @@ namespace WordMasterApp.Features.MessageContainer
         string Title { get; set; }
         string Message { get; set; }
         object? ExtraContent { get; set; }
+        Color PrimaryColor { get; set; }
     }
 }

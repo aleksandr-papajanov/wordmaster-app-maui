@@ -8,6 +8,9 @@ namespace WordMasterApp.Components.LoadingStripe
 {
     public enum LoadingStripeType
     {
-        HttpRequest
+        HttpRequest,
+        UIInteraction,
+        Error,
+        Success
     }
 }

@@ -2,16 +2,20 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenAI.Chat;
-using ReactiveUI;
 using WordMaster.AIClientProvider;
-using WordMasterApp.DataLayer;
-using WordMasterApp.DIFactories;
+using WordMaster.Data;
+using WordMaster.Data.Services;
+using WordMaster.Data.Services.Interfaces;
+using WordMaster.Generation;
+using WordMaster.Generation.Interfaces;
+using WordMasterApp.EntityViewModels.DIFactories;
 using WordMasterApp.Features;
+using WordMasterApp.Features.DeckList;
 using WordMasterApp.Features.MainPage;
 using WordMasterApp.Features.MessageContainer;
 using WordMasterApp.Features.WordDetails;
-using WordMasterApp.Services;
-using WordMasterApp.Services.Generation;
+using WordMasterApp.Features.WordList;
+using WordMasterApp.Features.WordUsage;
 
 namespace WordMasterApp
 {
@@ -30,31 +34,35 @@ namespace WordMasterApp
             // Регистрируем конфигурацию как сервис
             builder.Services.AddSingleton<IConfiguration>(configuration);
 
-            // di factories
-            builder.Services.AddTransient<IDeckListViewModelFactory, DeckListViewModelFactory>(); // DeckListView
-            builder.Services.AddTransient<IWordListViewModelFactory, WordListViewModelFactory>(); // WordListView
-            builder.Services.AddTransient<IWordDetailsViewModelFactory, WordDetailsViewModelFactory>(); // WordDetailsView
-            builder.Services.AddTransient<IWordUsageViewModelFactory, WordUsageViewModelFactory>(); // WordUsageView
+            // Wrapper factories
+            builder.Services.AddSingleton<ILanguageEntityViewModelFactory, LanguageEntityViewModelFactory>();
+            builder.Services.AddSingleton<IDeckEntityViewModelFactory, DeckEntityViewModelFactory>();
+            builder.Services.AddSingleton<IWordEntityViewModelFactory, WordEntityViewModelFactory>();
+            builder.Services.AddSingleton<IWordUsageEntityViewModelFactory, WordUsageEntityViewModelFactory>();
+            builder.Services.AddSingleton<IRelatedWordEntityViewModelFactory, RelatedWordEntityViewModelFactory>();
 
-            builder.Services.AddTransient<IDeckWrapperFactory, DeckWrapperFactory>(); // wrapper for Deck
-            builder.Services.AddTransient<IWordWrapperFactory, WordWrapperFactory>(); // wrapper for Word
-            builder.Services.AddTransient<IWordUsageWrapperFactory, WordUsageWrapperFactory>(); // wrapper for WordUsage
+            // NOTE:
+            // We explicitly use Lazy<T> here for factories that reference each other *up* the object graph,
+            // to avoid circular dependency issues during service resolution.
+            //
+            // For example, DeckEntityViewModelFactory internally depends on WordEntityViewModelFactory,
+            // and WordEntityViewModelFactory in turn refer back to DeckEntityViewModelFactory to lookup which deck it is in.
+            //
+            // This approach is intentionally applied only to keep the architecture maintainable
+            // and avoid injecting IServiceProvider or using service location anti-patterns.
+            builder.Services.AddSingleton(sp => new Lazy<IDeckEntityViewModelFactory>(() => sp.GetRequiredService<IDeckEntityViewModelFactory>()));
+            builder.Services.AddSingleton(sp => new Lazy<IWordEntityViewModelFactory>(() => sp.GetRequiredService<IWordEntityViewModelFactory>()));
 
-            // data and services
+            // Data and services
             builder.Services.AddSingleton<RealmDataContext>();
             builder.Services.AddTransient(typeof(IRepository<>), typeof(RealmRepository<>));
-            //builder.Services.AddTransient<IDataSeeder, DataSeeder>();
 
-            builder.Services.AddSingleton<IDeckService, DeckService>();
-            builder.Services.AddTransient(provider => new Lazy<IDeckService>(() => provider.GetRequiredService<IDeckService>()));
-
-            builder.Services.AddSingleton<IWordService, WordService>();
-            builder.Services.AddTransient(provider => new Lazy<IWordService>(() => provider.GetRequiredService<IWordService>()));
-
-            builder.Services.AddSingleton<IWordUsageService, WordUsageService>();
-            builder.Services.AddTransient(provider => new Lazy<IWordUsageService>(() => provider.GetRequiredService<IWordUsageService>()));
-
-            builder.Services.AddSingleton<IGenerationService, GenerationService>();
+            builder.Services.AddTransient<ILanguageService, LanguageService>();
+            builder.Services.AddTransient<IDeckService, DeckService>();
+            builder.Services.AddTransient<IWordService, WordService>();
+            builder.Services.AddTransient<IRelatedWordService, RelatedWordService>();
+            builder.Services.AddTransient<IWordUsageService, WordUsageService>();
+            builder.Services.AddTransient<IGenerationService, GenerationService>();
 
             // AI client provider
             builder.Services.AddSingleton<IAIClientProvider, AIClientProvider>();
@@ -69,15 +77,21 @@ namespace WordMasterApp
                 return client.GetChatClient(model);
             });
 
-            // pages and viewmodels
+            // ViewModel factories
+            builder.Services.AddTransient<IDeckListViewViewModelFactory, DeckListViewViewModelFactory>();
+            builder.Services.AddTransient<IWordListViewViewModelFactory, WordListViewViewModelFactory>();
+
+            // Pages and ViewModels
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<MainViewModel>();
 
             builder.Services.AddTransient<WordDetailsView>();
             builder.Services.AddTransient<WordDetailsViewModel>();
+            builder.Services.AddTransient<IWordDetailsViewViewModelFactory, WordDetailsViewViewModelFactory>();
 
             builder.Services.AddTransient<WordUsageView>();
             builder.Services.AddTransient<WordUsageViewViewModel>();
+            builder.Services.AddTransient<IWordUsageViewViewModelFactory, WordUsageViewViewModelFactory>();
             
             builder.Services.AddTransient<MessageContainer>();
             builder.Services.AddTransient<MessageContainerViewModel>();
@@ -93,12 +107,12 @@ namespace WordMasterApp
                 })
                 .ConfigureFonts(fonts =>
                 {
-                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                    fonts.AddFont("noto-sans-regular.ttf", "NotoSansRegular");
+                    fonts.AddFont("noto-sans-bold.ttf", "NotoSansBold");
+                    fonts.AddFont("noto-sans-light.ttf", "NotoSansLight");
                     fonts.AddFont("fa-solid-900.ttf", "FontAwesomeSolid");
                     fonts.AddFont("fa-regular-400.ttf", "FontAwesomeRegular");
                 });
-
 #if DEBUG
             builder.Logging.AddDebug();
 #endif

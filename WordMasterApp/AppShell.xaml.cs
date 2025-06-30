@@ -1,4 +1,4 @@
-﻿using WordMasterApp.DataLayer;
+﻿using WordMaster.Data;
 
 namespace WordMasterApp
 {

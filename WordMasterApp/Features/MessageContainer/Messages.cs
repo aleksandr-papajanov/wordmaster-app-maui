@@ -1,4 +1,8 @@
-﻿namespace WordMasterApp.Features.MessageContainer
+﻿using WordMaster.Common;
+using WordMasterApp.Components;
+using WordMasterApp.Helpers;
+
+namespace WordMasterApp.Features.MessageContainer
 {
     public class NotificationMessage : MessageModel
     {
@@ -6,6 +10,7 @@
         {
             Title = title;
             Message = message;
+            PrimaryColor = ThemeExtentions.GetColor("Primary");
 
             Actions.Add(new MessageAction { Text = "OK", Value = true });
         }
@@ -17,6 +22,7 @@
         {
             Title = title;
             Message = message;
+            PrimaryColor = ThemeExtentions.GetColor("PrimaryVariant");
 
             Actions.Add(new MessageAction { Text = "No", Value = false });
             Actions.Add(new MessageAction { Text = "Yes", Value = true });
@@ -25,7 +31,7 @@
     
     public class ConfirmWordCompletionMessage : ConfirmationMessage
     {
-        public ConfirmWordCompletionMessage(string word, string translation, string definition)
+        public ConfirmWordCompletionMessage(string word, string translation, string definition, WordUsageFrequenсy frequenсy)
             : base($"", "Do you want to complete the word with this suggestion?")
         {
             Actions.Clear();
@@ -37,9 +43,18 @@
             {
                 Spacing = 10,
                 Children = {
-                    new Label { Margin = 0, Padding = 0, Text = word, FontAttributes = FontAttributes.Bold, FontSize = 25 },
-                    new Label { Margin = 0, Padding = 0, Text = translation, FontSize = 17 },
-                    new Label { Margin = 0, Padding = 0, Text = definition, FontSize = 12 }
+                    new Label { Text = word, Style = Application.Current?.Resources["LabelH2"] as Style },
+                    new Label { Text = translation, Style = Application.Current?.Resources["LabelRegular"] as Style },
+                    new Label { Text = definition, Style = Application.Current?.Resources["LabelCaption"] as Style },
+                    new Label { Text = "Usage frequency:", Style = Application.Current?.Resources["LabelSubcaption"] as Style },
+                    new SegmentedProgressBar
+                    { 
+                        StartColor = ThemeExtentions.GetColor("Error"),
+                        EndColor = ThemeExtentions.GetColor("SecondaryVariant"),
+                        BackgroundColor = PrimaryColor,
+                        Segments = 5,
+                        Progress = (double)frequenсy / Enum.GetValues(typeof(WordUsageFrequenсy)).Length,
+                    }
                 }
             };
         }
@@ -56,6 +71,8 @@
     {
         public ErrorMessage(string message, string title = "Error")
         {
+            PrimaryColor = ThemeExtentions.GetColor("Error");
+
             Title = title;
             Message = message;
 

@@ -9,25 +9,24 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Input;
-using WordMasterApp.DIFactories;
-using WordMasterApp.EntityWrappers;
-using WordMasterApp.Services;
-using WordMasterApp.Services.Generation;
+using WordMaster.Generation;
+using WordMasterApp.EntityViewModels;
+using WordMasterApp.EntityViewModels.DIFactories;
 
 namespace WordMasterApp.Features
 {
     public class WordUsageViewViewModel : ReactiveObject, IValidatableViewModel, IActivatableViewModel
     {
-        private readonly IGenerationService _aiService;
-        private readonly IWordUsageWrapperFactory _usageWrapperFactory;
+        private readonly IWordUsageEntityViewModelFactory _factory;
         private readonly BehaviorSubject<string> _searchTextSubject = new(string.Empty);
 
-        private readonly ObservableAsPropertyHelper<WordWrapper?> _currentWord;
-        public WordWrapper? CurrentWord => _currentWord.Value;
+        private readonly ObservableAsPropertyHelper<WordEntityViewModel?> _currentWord;
+
+        public WordEntityViewModel? CurrentWord => _currentWord.Value;
 
         // Main collection
-        private  ReadOnlyObservableCollection<WordUsageWrapper> _usages;
-        public ReadOnlyObservableCollection<WordUsageWrapper> Usages => _usages;
+        private  ReadOnlyObservableCollection<WordUsageEntityViewModel> _usages;
+        public ReadOnlyObservableCollection<WordUsageEntityViewModel> Usages => _usages;
 
         // Search text binded to the UI entry field
         private string _searchText = string.Empty;
@@ -38,8 +37,8 @@ namespace WordMasterApp.Features
         }
 
         // Binded to SelectedItem of CollectionView
-        private WordUsageWrapper? _selectedUsage;
-        public WordUsageWrapper? SelectedUsage
+        private WordUsageEntityViewModel? _selectedUsage;
+        public WordUsageEntityViewModel? SelectedUsage
         {
             get => _selectedUsage;
             set => this.RaiseAndSetIfChanged(ref _selectedUsage, value);
@@ -89,13 +88,9 @@ namespace WordMasterApp.Features
         // Implementing IActivatableViewModel requires an Activator property
         public ViewModelActivator Activator { get; } = new ViewModelActivator();
 
-        public WordUsageViewViewModel(IObservable<WordWrapper?> word,
-                                      IWordUsageService usageService,
-                                      IGenerationService aiService,
-                                      IWordUsageWrapperFactory wordUsageWrapperFactory)
+        public WordUsageViewViewModel(IObservable<WordEntityViewModel?> word, IWordUsageEntityViewModelFactory factory)
         {
-            _aiService = aiService;
-            _usageWrapperFactory = wordUsageWrapperFactory;
+            _factory = factory;
 
             word.ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, x => x.CurrentWord, out _currentWord);
@@ -108,10 +103,10 @@ namespace WordMasterApp.Features
                 Observable
                     .CombineLatest(word, _searchTextSubject.AsObservable(), (word, filter) => (word, filter))
                     .Select(x => x.word == null
-                        ? Observable.Return(ChangeSet<WordUsageWrapper>.Empty)
-                        : usageService.GetStream(x.word.Id, x.filter))
+                        ? Observable.Return(ChangeSet<WordUsageEntityViewModel>.Empty)
+                        : x.word.Usages(x.filter))
                     .Switch()
-                    .Sort(SortExpressionComparer<WordUsageWrapper>.Descending(x => x.CreatedAt))
+                    .Sort(SortExpressionComparer<WordUsageEntityViewModel>.Descending(x => x.CreatedAt))
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Bind(out _usages)
                     .DisposeMany()
@@ -120,7 +115,7 @@ namespace WordMasterApp.Features
 
                 this.WhenAnyValue(x => x.SearchText)
                     .Throttle(TimeSpan.FromMilliseconds(80))
-                    .Select(text => text?.Trim() ?? string.Empty)
+                    .Select(x => x?.Trim() ?? string.Empty)
                     .DistinctUntilChanged()
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Subscribe(text => _searchTextSubject.OnNext(text))
@@ -180,7 +175,7 @@ namespace WordMasterApp.Features
             UpdateUsageCommand   = ReactiveCommand.CreateFromTask(UpdateAsync, canUpdate);
             EditUsageCommand     = ReactiveCommand.Create(Edit, canEdit);
             DeleteUsageCommand   = ReactiveCommand.CreateFromTask(DeleteAsync, canDelete);
-            SelectUsageCommand   = ReactiveCommand.Create<WordUsageWrapper>(OnUsageTapped);
+            SelectUsageCommand   = ReactiveCommand.Create<WordUsageEntityViewModel>(OnUsageTapped);
         }
 
 
@@ -265,7 +260,7 @@ namespace WordMasterApp.Features
                 if (CurrentWord == null)
                     return;
 
-                var newUsage = _usageWrapperFactory.CreateNew(CurrentWord);
+                var newUsage = _factory.Create(CurrentWord);
                 newUsage.Text = Text;
                 newUsage.Translation = Translation;
 
@@ -286,7 +281,7 @@ namespace WordMasterApp.Features
             await SelectedUsage.DeleteAsync();
         }
 
-        private void OnUsageTapped(WordUsageWrapper tapped)
+        private void OnUsageTapped(WordUsageEntityViewModel tapped)
         {
             SelectedUsage = SelectedUsage != tapped
                 ? tapped

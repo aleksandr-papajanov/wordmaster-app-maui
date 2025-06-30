@@ -7,6 +7,9 @@ public partial class Header : ContentView
 {
     public static readonly BindableProperty TitleProperty =
         BindableProperty.Create(nameof(Title), typeof(string), typeof(Header), string.Empty);
+    
+    public static readonly BindableProperty SubtitleProperty =
+        BindableProperty.Create(nameof(Subtitle), typeof(string), typeof(Header), string.Empty);
 
     public static readonly BindableProperty ButtonsProperty =
         BindableProperty.Create(nameof(Buttons), typeof(ObservableCollection<HeaderButton>), typeof(Header),
@@ -16,6 +19,12 @@ public partial class Header : ContentView
     {
         get => (string)GetValue(TitleProperty);
         set => SetValue(TitleProperty, value);
+    }
+    
+    public string Subtitle
+    {
+        get => (string)GetValue(SubtitleProperty);
+        set => SetValue(SubtitleProperty, value);
     }
     
     public ObservableCollection<HeaderButton> Buttons

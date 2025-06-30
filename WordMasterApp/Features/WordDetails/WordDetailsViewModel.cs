@@ -1,25 +1,29 @@
-﻿using ReactiveUI;
+﻿using DynamicData;
+using ReactiveUI;
+using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using WordMasterApp.DIFactories;
-using WordMasterApp.EntityWrappers;
+using WordMasterApp.EntityViewModels;
 using WordMasterApp.Features.MessageContainer;
+using WordMasterApp.Features.WordUsage;
 using WordMasterApp.Messages;
-using WordMasterApp.Services;
-using WordMasterApp.Services.Generation;
 
 namespace WordMasterApp.Features
 {
     public partial class WordDetailsViewModel : ReactiveObject, IActivatableViewModel
     {
-        private readonly IWordService _wordService;
-        private readonly IGenerationService _aiService;
         private readonly IMessageService _messageService;
-        private readonly IWordUsageViewModelFactory _wordUsageFactory;
+        private readonly IWordUsageViewViewModelFactory _wordUsageFactory;
 
-        private readonly ObservableAsPropertyHelper<WordWrapper?> _currentWord;
-        public WordWrapper? CurrentWord => _currentWord.Value;
+        private readonly ObservableAsPropertyHelper<WordEntityViewModel?> _currentWord;
+        public WordEntityViewModel? CurrentWord => _currentWord.Value;
+
+        private ReadOnlyObservableCollection<RelatedWordEntityViewModel> _synonyms = null!;
+        public ReadOnlyObservableCollection<RelatedWordEntityViewModel> Synonyms => _synonyms;
+
+        private ReadOnlyObservableCollection<RelatedWordEntityViewModel> _antonyms = null!;
+        public ReadOnlyObservableCollection<RelatedWordEntityViewModel> Antonyms => _antonyms;
 
         private bool _hasTriedToUpdate = false;
         public bool HasTriedToUpdate
@@ -34,20 +38,17 @@ namespace WordMasterApp.Features
         // Commands
         public ICommand UpdateCommand { get; private set; }
         public ICommand AutoCompleteCommand { get; private set; }
+        public ICommand ExplainRelatedWordCommand { get; private set; }
 
 
         // Implementing IActivatableViewModel
         public ViewModelActivator Activator { get; } = new ViewModelActivator();
 
 
-        public WordDetailsViewModel(IObservable<WordWrapper?> word,
-                                    IWordService wordService,
-                                    IGenerationService aiService,
+        public WordDetailsViewModel(IObservable<WordEntityViewModel?> word,
                                     IMessageService messageService,
-                                    IWordUsageViewModelFactory wordUsageFactory)
+                                    IWordUsageViewViewModelFactory wordUsageFactory)
         {
-            _wordService = wordService;
-            _aiService = aiService;
             _messageService = messageService;
             _wordUsageFactory = wordUsageFactory;
 
@@ -69,6 +70,26 @@ namespace WordMasterApp.Features
                     HasTriedToUpdate = false;
                 })
                 .DisposeWith(disposables);
+
+                this.WhenAnyValue(x => x.CurrentWord)
+                    .Select(x => x != null && x.IsManaged
+                        ? x.Synonyms
+                        : Observable.Return(ChangeSet<RelatedWordEntityViewModel>.Empty))
+                    .Switch()
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Bind(out _synonyms)
+                    .Subscribe(_ => this.RaisePropertyChanged(nameof(Synonyms)))
+                    .DisposeWith(disposables);
+                
+                this.WhenAnyValue(x => x.CurrentWord)
+                    .Select(x => x != null && x.IsManaged
+                        ? x.Antonyms
+                        : Observable.Return(ChangeSet<RelatedWordEntityViewModel>.Empty))
+                    .Switch()
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Bind(out _antonyms)
+                    .Subscribe(_ => this.RaisePropertyChanged(nameof(Antonyms)))
+                    .DisposeWith(disposables);
             });
         }
 
@@ -85,6 +106,44 @@ namespace WordMasterApp.Features
 
             UpdateCommand = ReactiveCommand.CreateFromTask(UpdateWordAsync, canUpdate);
             AutoCompleteCommand = ReactiveCommand.CreateFromTask(AutoCompleteAsync, isNew);
+            ExplainRelatedWordCommand = ReactiveCommand.CreateFromTask<RelatedWordEntityViewModel>(ExplainRelatedWordAsync, word);
+        }
+
+        private async Task ExplainRelatedWordAsync(RelatedWordEntityViewModel relatedWord)
+        {
+            //if (relatedWord == null || CurrentWord == null || relatedWord.WordId != CurrentWord.Id)
+            //    return;
+
+            //var session = _wordModuleService.Generations.CompleteWordBase(new WordCompletionRequest(
+            //    Word: relatedWord.Text,
+            //    SourceLanguage: CurrentWord?.Deck?.SourceLanguage?.Name ?? throw new Exception("Source language is not set for the current deck."),
+            //    TargetLanguage: CurrentWord?.Deck?.TargetLanguage?.Name ?? throw new Exception("Target language is not set for the current deck.")
+            //));
+
+            //session.OnComplete += async (context) =>
+            //{
+            //    if (context.SessionResult == GenerationSessionResult.Error)
+            //    {
+            //        _messageService.Publish(new ErrorMessage(context.ErrorMessage ?? "An error occurred during word completion."));
+            //    }
+            //    else if (context.SessionResult == GenerationSessionResult.Success)
+            //    {
+            //        var text = context.Get<string>(WordBaseCompletionKeys.Word);
+            //        var trans = context.Get<string>(WordBaseCompletionKeys.Translation);
+            //        var def = context.Get<string>(WordBaseCompletionKeys.Definition);
+            //        var freq = context.Get<WordUsageFrequenсy>(WordBaseCompletionKeys.UsageFrequency);
+
+            //        var box = new ConfirmWordCompletionMessage(text, trans, def, freq);
+
+                    
+
+            //        _messageService.Publish(box);
+            //    }
+
+            //    await Task.CompletedTask;
+            //};
+
+            //await session.RunAsync();
         }
 
         private async Task AutoCompleteAsync()

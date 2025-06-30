@@ -2,9 +2,11 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using WordMasterApp.DIFactories;
-using WordMasterApp.EntityWrappers;
+using WordMasterApp.Components.LoadingStripe;
+using WordMasterApp.EntityViewModels;
+using WordMasterApp.Features.DeckList;
 using WordMasterApp.Features.MessageContainer;
+using WordMasterApp.Features.WordDetails;
 using WordMasterApp.Features.WordList;
 using WordMasterApp.Messages;
 
@@ -12,13 +14,13 @@ namespace WordMasterApp.Features.MainPage
 {
     public class MainViewModel : ReactiveObject, IActivatableViewModel
     {
-        private readonly IDeckListViewModelFactory _deckListFactory;
-        private readonly IWordListViewModelFactory _wordListFactory;
-        private readonly IWordDetailsViewModelFactory _wordDetailsFactory;
+        private readonly IDeckListViewViewModelFactory _deckListFactory;
+        private readonly IWordListViewViewModelFactory _wordListFactory;
+        private readonly IWordDetailsViewViewModelFactory _wordDetailsFactory;
         public readonly IMessageService _messageService;
 
-        private readonly Subject<DeckWrapper?> _deckSubject = new();
-        private readonly Subject<WordWrapper?> _wordSubject = new();
+        private readonly Subject<DeckEntityViewModel?> _deckSubject = new();
+        private readonly Subject<WordEntityViewModel?> _wordSubject = new();
 
         // Screen sections
         private ReactiveObject? _sidebarSection;
@@ -48,6 +50,13 @@ namespace WordMasterApp.Features.MainPage
             get => _isLoadingStripeAnimating;
             set => this.RaiseAndSetIfChanged(ref _isLoadingStripeAnimating, value);
         }
+        
+        private LoadingStripeType _loadingStripeType;
+        public LoadingStripeType LoadingStripeType
+        {
+            get => _loadingStripeType;
+            set => this.RaiseAndSetIfChanged(ref _loadingStripeType, value);
+        }
 
         // ViewModels
         private WordListViewViewModel? _wordList;
@@ -69,9 +78,9 @@ namespace WordMasterApp.Features.MainPage
         // Implementing IActivatableViewModel requires an Activator property
         public ViewModelActivator Activator { get; } = new ViewModelActivator();
 
-        public MainViewModel(IDeckListViewModelFactory deckListFactory,
-                             IWordListViewModelFactory wordListFactory,
-                             IWordDetailsViewModelFactory wordDetailsFactory,
+        public MainViewModel(IDeckListViewViewModelFactory deckListFactory,
+                             IWordListViewViewModelFactory wordListFactory,
+                             IWordDetailsViewViewModelFactory wordDetailsFactory,
                              IMessageService messageService)
         {
             _deckListFactory = deckListFactory;
@@ -98,15 +107,15 @@ namespace WordMasterApp.Features.MainPage
                 deckListViewModel
                     .WhenAnyValue(x => x.SelectedDeck)
                     .ObserveOn(RxApp.MainThreadScheduler)
-                    .Subscribe(deck => _deckSubject.OnNext(deck))
+                    .Subscribe(d => _deckSubject.OnNext(d))
                     .DisposeWith(disposables);
 
                 this.WhenAnyValue(x => x.WordList)
                     .WhereNotNull()
-                    .Select(wordList => wordList.WhenAnyValue(x => x.SelectedWord))
+                    .Select(w => w.WhenAnyValue(x => x.SelectedWord))
                     .Switch()
                     .ObserveOn(RxApp.MainThreadScheduler)
-                    .Subscribe(word => _wordSubject.OnNext(word))
+                    .Subscribe(w => _wordSubject.OnNext(w))
                     .DisposeWith(disposables);
 
                 _deckSubject.
@@ -152,6 +161,7 @@ namespace WordMasterApp.Features.MainPage
                     .Subscribe(message =>
                     {
                         IsLoadingStripeAnimating = message.IsAnimating;
+                        LoadingStripeType = message.Type;
                     })
                     .DisposeWith(disposables);
             });

@@ -12,6 +12,7 @@ namespace WordMasterApp.Features.MessageContainer
         public string Title { get; set; }
         public string Message { get; set; }
         public object? ExtraContent { get; set; }
+        public Color PrimaryColor { get; set; } = Colors.Transparent;
 
         public MessageModel()
         {
