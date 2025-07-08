@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:local="clr-namespace:WordMasterApp.Features"
+             xmlns:rw="clr-namespace:WordMasterApp.Features.RelatedWords"
              xmlns:components="clr-namespace:WordMasterApp.Components"
              xmlns:header="clr-namespace:WordMasterApp.Components.Header"
              xmlns:validation="clr-namespace:WordMasterApp.Components.ValidationWrapper"
@@ -39,7 +40,7 @@
                         <Label Style="{StaticResource LabelSubcaption}"
                                Text="Part of speech" />
                         <Label Style="{StaticResource LabelRegular}"
-                               Text="{Binding CurrentWord.PartOfSpeechLabel}" />
+                               Text="{Binding CurrentWord.Details.PartOfSpeechLabel}" />
                     </VerticalStackLayout>
                 </Border>
                 <Border Grid.Column="1"
@@ -48,7 +49,7 @@
                         <Label Style="{StaticResource LabelSubcaption}"
                                Text="Pronunciation" />
                         <Label Style="{StaticResource LabelRegular}"
-                               Text="{Binding CurrentWord.Pronunciation}" />
+                               Text="{Binding CurrentWord.Details.Pronunciation}" />
                     </VerticalStackLayout>
                 </Border>
                 <Border Grid.Column="2"
@@ -81,57 +82,9 @@
             </validation:ValidationWrapper>
 
 
-
-            <Grid ColumnDefinitions="*,*"
-                  RowDefinitions="Auto,*"
-                  ColumnSpacing="10"
-                  RowSpacing="5">
-
-                <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource LabelSubcaption}" Text="Synonyms:" />
-                <Label Grid.Column="1" Grid.Row="0" Style="{StaticResource LabelSubcaption}" Text="Antonyms:" />
-
-                <FlexLayout Grid.Column="0" Grid.Row="1"
-                            Direction="Row"
-                            Wrap="Wrap"
-                            AlignItems="Start"
-                            AlignContent="Start"
-                            BindableLayout.ItemsSource="{Binding Synonyms}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <Label Style="{StaticResource LabelRegularLink}"
-                                   Margin="0,0,4,0"
-                                   Text="{Binding Text}">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ViewModel.ExplainRelatedWordCommand, Source={x:Reference Root}}"
-                                                          CommandParameter="{Binding .}" />
-                                </Label.GestureRecognizers>
-                            </Label>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
-
-                <FlexLayout Grid.Column="1" Grid.Row="1"
-                            Direction="Row"
-                            Wrap="Wrap"
-                            AlignItems="Start"
-                            AlignContent="Start"
-                            BindableLayout.ItemsSource="{Binding Antonyms}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <Label Style="{StaticResource LabelRegularLink}"
-                                   Margin="0,0,4,0"
-                                   Text="{Binding Text}">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ViewModel.ExplainRelatedWordCommand, Source={x:Reference Root}}"
-                                                          CommandParameter="{Binding .}" />
-                                </Label.GestureRecognizers>
-                            </Label>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
-
-            </Grid>
-
+            <!-- Word usages view -->
+            <rw:RelatedWordsView ViewModel="{Binding RelatedWordsViewModel}" />
+            
             <!-- Word usages view -->
             <local:WordUsageView ViewModel="{Binding WordUsageViewModel}" />
         </StackLayout>

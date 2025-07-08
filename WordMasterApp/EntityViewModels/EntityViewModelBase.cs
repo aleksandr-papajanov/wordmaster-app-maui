@@ -6,13 +6,14 @@ using Realms;
 namespace WordMasterApp.EntityViewModels
 {
     public abstract class EntityViewModelBase<T> : ReactiveObject, IValidatableViewModel
-        where T : RealmObject, new()
+        where T : RealmObject
     {
         protected record UpdatePropertyMap(Action ToWrapper, Action ToEntity);
 
         protected readonly T _entity;
         protected readonly Dictionary<string, UpdatePropertyMap> _updateMap;
 
+        public T Entity => _entity;
         public bool IsManaged => _entity.IsManaged;
 
         // Implementing IValidatableViewModel
@@ -33,7 +34,7 @@ namespace WordMasterApp.EntityViewModels
             {
                 if (e.PropertyName != null && _updateMap.TryGetValue(e.PropertyName, out var actions))
                 {
-                    actions.ToEntity.Invoke();
+                    actions.ToWrapper.Invoke();
                 }
             };
 

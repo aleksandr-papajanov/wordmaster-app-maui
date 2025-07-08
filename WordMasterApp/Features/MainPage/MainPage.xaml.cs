@@ -50,11 +50,12 @@ public partial class MainPage : ContentPage, IViewFor<MainViewModel>
         });
     }
 
-    private int i = 0;
+    //private int i = 0;
     private void Button_Clicked(object sender, EventArgs e)
     {
-        
-        MessageBus.Current.SendMessage(new LoadingStripeMessage(true, (LoadingStripeType)i++));
-        if (i > 3) i = 0;
+        ViewModel?.Test();
+
+        //MessageBus.Current.SendMessage(new LoadingStripeMessage(true, (LoadingStripeType)i++));
+        //if (i > 3) i = 0;
     }
 }

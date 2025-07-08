@@ -20,8 +20,8 @@ namespace WordMasterApp.Features.WordList
         private readonly SourceList<WordEntityViewModel> _staticItems = new();
 
         private readonly ObservableAsPropertyHelper<DeckEntityViewModel?> _currentDeck;
-
         public DeckEntityViewModel? CurrentDeck => _currentDeck.Value;
+
 
         private ReadOnlyObservableCollection<WordEntityViewModel> _words = null!;
         public ReadOnlyObservableCollection<WordEntityViewModel> Words => _words;
@@ -71,6 +71,18 @@ namespace WordMasterApp.Features.WordList
                         ? x.deck.Words
                         : Observable.Return(ChangeSet<WordEntityViewModel>.Empty))
                     .Switch()
+                    .Do(changeset =>
+                    {
+                        // In case a new word appears in source, remove it from static items where it was before
+                        if (_staticItems.Count == 0)
+                            return;
+
+                        changeset
+                            .Where(c => c.Reason == ListChangeReason.Add)
+                            .Select(c => c.Item.Current)
+                            .ToList()
+                            .ForEach(OnNewWordAppeared);
+                    })
                     .MergeChangeSets(_staticItems.Connect())
                         .Sort(SortExpressionComparer<WordEntityViewModel>
                             .Ascending(x => !x.IsManaged ? 0 : 1)
@@ -78,16 +90,7 @@ namespace WordMasterApp.Features.WordList
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Bind(out _words)
                     .DisposeMany()
-                    .Subscribe(_ =>
-                    {
-                        // Ensure that the selected word is cleared if it no longer exists in the list
-                        if (SelectedWord != null && !Words.Contains(SelectedWord))
-                        {
-                            //SelectedWord = null;
-                        }
-
-                        this.RaisePropertyChanged(nameof(Words));
-                    })
+                    .Subscribe(_ => this.RaisePropertyChanged(nameof(Words)))
                     .DisposeWith(disposables);
 
                 // Handle search text changes
@@ -97,17 +100,6 @@ namespace WordMasterApp.Features.WordList
                     .DistinctUntilChanged()
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Subscribe(text => _searchTextSubject.OnNext(text))
-                    .DisposeWith(disposables);
-
-                MessageBus.Current
-                    .Listen<WordCreatedMessage>()
-                    .ObserveOn(RxApp.MainThreadScheduler)
-                    .Subscribe(message =>
-                    {
-                        _staticItems.Clear();
-                        SelectedWord = Words.FirstOrDefault(w => !_staticItems.Items.Contains(w) && w.Id == message.NewWordId);
-                        
-                    })
                     .DisposeWith(disposables);
             });
             
@@ -125,6 +117,17 @@ namespace WordMasterApp.Features.WordList
             SelectWordCommand = ReactiveCommand.Create<WordEntityViewModel>(Select);
             CreateWordCommand = ReactiveCommand.Create(CreateWord, canCreate);
             DeleteWordCommand = ReactiveCommand.CreateFromTask(DeleteWord, canDelete);
+        }
+
+        private void OnNewWordAppeared(WordEntityViewModel newWord)
+        {
+            var staticMatch = _staticItems.Items.FirstOrDefault(s => s.Id == newWord.Id);
+
+            if (staticMatch != null)
+            {
+                _staticItems.Remove(staticMatch);
+                SelectedWord = newWord;
+            }
         }
 
         private void Select(WordEntityViewModel tapped)
@@ -149,10 +152,10 @@ namespace WordMasterApp.Features.WordList
 
         private async Task DeleteWord()
         {
-            if (SelectedWord == null)
+            if (SelectedWord == null || CurrentDeck == null)
                 return;
 
-            await SelectedWord.DeleteAsync();
+            await SelectedWord.DeleteAsync(CurrentDeck);
             SelectedWord = null;
         }
     }

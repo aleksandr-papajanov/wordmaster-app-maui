@@ -99,14 +99,10 @@
 
 	<ItemGroup>
 	  <MauiAsset Remove="Resources\Raw\AboutAssets.txt" />
-	  <MauiAsset Remove="Resources\Raw\SeedDatabase.realm" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\Raw\AboutAssets.txt" />
-	  <EmbeddedResource Include="Resources\Raw\SeedDatabase.realm">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </EmbeddedResource>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -143,6 +139,9 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Features\MessageContainer\MessageContainer.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\RelatedWords\RelatedWordsView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Features\WordList\WordListView.xaml">
@@ -203,9 +202,6 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="lib\WordMaster.AIClientProvider.dll">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Resources\Raw\SeedDatabase.realm">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>

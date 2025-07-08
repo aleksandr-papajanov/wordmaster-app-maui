@@ -6,9 +6,10 @@ namespace WordMasterApp.EntityViewModels
 {
     public class DeckEntityViewModel : EntityViewModelBase<Deck>
     {
-        private DeckEntityViewModelActions _actions;
+        private DeckEntityViewModelActions? _actions;
         public DeckEntityViewModelActions Actions
         {
+            get => _actions ?? throw new InvalidOperationException("Actions must be set before using this view model.");
             set { _actions = value; }
         }
 
@@ -17,10 +18,10 @@ namespace WordMasterApp.EntityViewModels
         public string Name { get; set; } = string.Empty;
 
         // Navigation properties
-        public LanguageEntityViewModel SourceLanguage => _actions.GetSourceLanguage();
-        public LanguageEntityViewModel TargetLanguage => _actions.GetTargetLanguage();
+        public LanguageEntityViewModel SourceLanguage => Actions.GetSourceLanguage();
+        public LanguageEntityViewModel TargetLanguage => Actions.GetTargetLanguage();
 
-        public IObservable<IChangeSet<WordEntityViewModel>> Words => _actions.GetWordsStream("");
+        public IObservable<IChangeSet<WordEntityViewModel>> Words => Actions.GetWordsStream("");
 
 
         public DeckEntityViewModel(Deck entity) : base(entity) { }

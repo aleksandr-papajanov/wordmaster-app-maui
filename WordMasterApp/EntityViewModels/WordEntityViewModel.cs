@@ -3,19 +3,24 @@ using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using WordMaster.Common;
 using WordMaster.Data.Models;
-using WordMasterApp.EntityViewModels.Actions;
-using WordMasterApp.Features.MessageContainer;
 using WordMaster.Generation;
 using WordMaster.Generation.DTOs;
+using WordMaster.Generation.Interfaces;
 using WordMaster.Generation.Stages;
+using WordMasterApp.EntityViewModels.Actions;
+using WordMasterApp.Features.MessageContainer.Messages;
+using WordMasterApp.Helpers;
 
 namespace WordMasterApp.EntityViewModels
 {
     public class WordEntityViewModel : EntityViewModelBase<Word>
     {
-        private WordEntityViewModelActions _actions;
+        private readonly ISessionBuilder _generationSessionBuilder;
+
+        private WordEntityViewModelActions? _actions;
         public WordEntityViewModelActions Actions
         {
+            get => _actions ?? throw new InvalidOperationException("Actions must be set before using this view model.");
             set { _actions = value; }
         }
 
@@ -43,23 +48,22 @@ namespace WordMasterApp.EntityViewModels
 
         // UI read-only properties
         public Guid Id { get; set; }
-        public string Pronunciation { get; set; } = string.Empty;
-        public string PartOfSpeechLabel { get; set; } = string.Empty;
-        public PartOfSpeech PartOfSpeechType { get; set; }
         public WordUsageFrequenсy UsageFrequency { get; set; }
 
         // Read-only properties
         public DateTimeOffset CreatedAt => _entity.CreatedAt;
 
         // Navigation properties
-        public DeckEntityViewModel? Deck => _actions.GetParentDeck();
-        public IObservable<IChangeSet<WordUsageEntityViewModel>> Usages(string filter) => _actions.GetUsagesStream("");
-        public IObservable<IChangeSet<RelatedWordEntityViewModel>> Synonyms => _actions.GetRelatedWordsStream(WordRelationType.Synonym);
-        public IObservable<IChangeSet<RelatedWordEntityViewModel>> Antonyms => _actions.GetRelatedWordsStream(WordRelationType.Antonym);
+        public DeckEntityViewModel Deck => Actions.GetParentDeck();
+        public WordDetailsEntityViewModel? Details => Actions.GetDetails();
+        public IObservable<IChangeSet<WordUsageEntityViewModel>> Usages(string filter) => Actions.GetUsagesStream("");
+        public IObservable<IChangeSet<WordRelationEntityViewModel>> Synonyms => Actions.GetRelatedWordsStream(WordRelationType.Synonym);
+        public IObservable<IChangeSet<WordRelationEntityViewModel>> Antonyms => Actions.GetRelatedWordsStream(WordRelationType.Antonym);
 
 
-        public WordEntityViewModel(Word entity) : base(entity)
+        public WordEntityViewModel(Word entity, ISessionBuilder generationSessionBuilder) : base(entity)
         {
+            _generationSessionBuilder = generationSessionBuilder;
             SetupValidation();
         }
 
@@ -74,13 +78,13 @@ namespace WordMasterApp.EntityViewModels
             {
                 nameof(Word.Text),
                 new (
-                    () => Text = _entity.Text,
+                    () => Text = _entity.Text ?? string.Empty,
                     () => _entity.Text = Text)
             },
             {
                 nameof(Word.Translation),
                 new (
-                    () => Translation = _entity.Translation,
+                    () => Translation = _entity.Translation ?? string.Empty,
                     () => _entity.Translation = Translation)
             },
             {
@@ -90,28 +94,16 @@ namespace WordMasterApp.EntityViewModels
                     () => _entity.Definition = Definition)
             },
             {
-                nameof(Word.Pronunciation),
-                new (
-                    () => Pronunciation = _entity.Pronunciation ?? string.Empty,
-                    () => _entity.Pronunciation = Pronunciation)
-            },
-            {
-                nameof(Word.PartOfSpeechLabel),
-                new (
-                    () => PartOfSpeechLabel = _entity.PartOfSpeechLabel ?? string.Empty,
-                    () => _entity.PartOfSpeechLabel = PartOfSpeechLabel)
-            },
-            {
-                nameof(Word.PartOfSpeechType),
-                new (
-                    () => PartOfSpeechType = (PartOfSpeech)_entity.PartOfSpeechType,
-                    () => _entity.PartOfSpeechType = (int)PartOfSpeechType)
-            },
-            {
                 nameof(Word.UsageFrequency),
                 new (
-                    () => UsageFrequency = (WordUsageFrequenсy)_entity.UsageFrequency,
+                    () => UsageFrequency = (WordUsageFrequenсy)(_entity.UsageFrequency ?? 0),
                     () => _entity.UsageFrequency = (int)UsageFrequency)
+            },
+            {
+                nameof(Word.Details),
+                new (
+                    () => this.RaisePropertyChanged(nameof(Details)),
+                    () => { /* It can't be changed from UI or ViewModel directly */ })
             }
         };
 
@@ -137,7 +129,7 @@ namespace WordMasterApp.EntityViewModels
         {
             if (IsManaged)
             {
-                await _actions.UpdateAsync((t) =>
+                await Actions.UpdateAsync((t) =>
                 {
                     UpdateEntity();
                 });
@@ -146,78 +138,140 @@ namespace WordMasterApp.EntityViewModels
             {
                 UpdateEntity();
 
-                await _actions.CreateAsync();
+                await Actions.CreateAsync();
             }
         }
 
-        public async Task DeleteAsync()
+        public async Task DeleteAsync(DeckEntityViewModel deck)
         {
-            await _actions.DeleteAsync();
+            await Actions.DeleteAsync(deck);
         }
 
-        public async Task AutoCompleteAsync(Action<MessageModel> publishMessage)
+        public async Task AiCompleteAsync(
+            Interaction<IContext, ConfirmRelatedWordCompletionMessageResult> basicsInteraction,
+            Interaction<IContext, ConfirmRelatedWordUsagesCompletionMessageResult> usagesInteraction)
         {
-            if (IsManaged)
-            {
-                throw new InvalidOperationException("Cannot auto-complete a managed entity.");
-            }
-
             var request = new WordCompletionRequest
             {
                 Word = Text,
-                Translation = Translation,
-                Definition = Definition,
-                SourceLanguage = Deck?.SourceLanguage?.Name ?? throw new Exception("Source language is not set for the current deck."),
-                TargetLanguage = Deck?.TargetLanguage?.Name ?? throw new Exception("Target language is not set for the current deck."),
+                SourceLanguage = Deck.SourceLanguage.Name,
+                TargetLanguage = Deck.TargetLanguage.Name,
+                UsagesCount = 3,
             };
 
-            var session = _actions.CompleteWordFull(request);
+            _generationSessionBuilder.Reset();
 
-            session.OnInteractionRequested += async interaction =>
-            {
-                if (interaction.StageName == nameof(WordBaseCompletionStage))
-                {
-                    var box = new ConfirmWordCompletionMessage(
-                        interaction.ContextSnapshot.Get<string>(WordBaseCompletionKeys.Word),
-                        interaction.ContextSnapshot.Get<string>(WordBaseCompletionKeys.Translation),
-                        interaction.ContextSnapshot.Get<string>(WordBaseCompletionKeys.Definition),
-                        interaction.ContextSnapshot.Get<WordUsageFrequenсy>(WordBaseCompletionKeys.UsageFrequency)
-                    );
-
-                    publishMessage(box);
-
-                    var result = await box.Completion;
-
-                    Func<Task> action = result switch
+            var session = _generationSessionBuilder
+                .UseMiddleware(new LoadingIndicationGenerationMiddleware())
+                .UseRetryMiddleware(1)
+                .UseWordBasicsCompletionStage()
+                .UseStage(null, new InteractionStage<ConfirmRelatedWordCompletionMessageResult>(
+                    interaction: basicsInteraction,
+                    onResult: async (context, control, result) =>
                     {
-                        ConfirmWordCompletionMessageResult.Yes => interaction.SessionControl.Continue,
-                        ConfirmWordCompletionMessageResult.TryAgain => interaction.SessionControl.Repeat,
-                        ConfirmWordCompletionMessageResult.Cancel => interaction.SessionControl.Cancel,
-                        _ => throw new InvalidOperationException("Unexpected result from confirmation message.")
-                    };
-                }
-            };
+                        switch (result)
+                        {
+                            case ConfirmRelatedWordCompletionMessageResult.TryAgain:
+                                await control.RepeatStage();
+                                break;
+
+                            case ConfirmRelatedWordCompletionMessageResult.AddToDeck:
+                                await control.ToNextStage();
+                                break;
+
+                            case ConfirmRelatedWordCompletionMessageResult.Save:
+                                await control.FinishAfter("save");
+                                await control.ToNextStage();
+                                break;
+
+                            case ConfirmRelatedWordCompletionMessageResult.Cancel:
+                            default:
+                                await control.Cancel();
+                                break;
+                        }
+                    }))
+                .UseCustomActionStage("save", async (context, control) =>
+                {
+                    // Save progress
+                    var response = context.ToWordBasicsCompletionResponse();
+
+                    Text = response.Word;
+                    Translation = response.Translation;
+                    Definition = response.Definition;
+                    UsageFrequency = response.UsageFrequency;
+
+                    await SaveAsync();
+                })
+                .UseWordDetailsCompletionStage()
+                .UseCustomActionStage(null, async (context, control) =>
+                {
+                    // Save progress
+                    var details = context.ToWordCompletionResponse();
+
+                    await Actions.CreateDetails(
+                        details.Pronunciation,
+                        details.PartOfSpeechLabel,
+                        details.PartOfSpeechType);
+
+                    foreach (var synonym in details.Synonyms)
+                    {
+                        await Actions.CreateRelation(synonym, WordRelationType.Synonym);
+                    }
+
+                    foreach (var antonym in details.Antonyms)
+                    {
+                        await Actions.CreateRelation(antonym, WordRelationType.Antonym);
+                    }
+                })
+                .UseWordUsageCompletionStage()
+                .UseStage(null, new InteractionStage<ConfirmRelatedWordUsagesCompletionMessageResult>(
+                    interaction: usagesInteraction,
+                    onResult: async (context, control, result) =>
+                    {
+                        switch (result)
+                        {
+                            case ConfirmRelatedWordUsagesCompletionMessageResult.TryAgain:
+                                await control.RepeatStage();
+                                break;
+
+                            case ConfirmRelatedWordUsagesCompletionMessageResult.AddToDeck:
+                                await control.ToNextStage();
+                                break;
+
+                            case ConfirmRelatedWordUsagesCompletionMessageResult.Cancel:
+                            default:
+                                await control.Cancel();
+                                break;
+                        }
+                    }))
+                .UseCustomActionStage(null, async (context, control) =>
+                {
+                    // Save progress
+                    var usages = context.ToWordCompletionResponse();
+                    foreach (var usage in usages.Sentences)
+                    {
+                        await Actions.CreateUsage(usage.Key, usage.Value);
+                    }
+                })
+                .SetRequest(request)
+                .Build();
 
             session.OnComplete += async context =>
             {
-                if (context.SessionResult == GenerationSessionResult.Error)
+                switch (context.SessionResult)
                 {
-                    publishMessage(new ErrorMessage(context.ErrorMessage ?? "An error occurred during word completion."));
-                }
-                else if (context.SessionResult == GenerationSessionResult.Success)
-                { 
-                    Text              = context.Get<string>(WordBaseCompletionKeys.Word);
-                    Translation       = context.Get<string>(WordBaseCompletionKeys.Translation);
-                    Definition        = context.Get<string>(WordBaseCompletionKeys.Definition);
-                    Pronunciation     = context.Get<string>(WordBaseCompletionKeys.Pronunciation);
-                    PartOfSpeechLabel = context.Get<string>(WordBaseCompletionKeys.PartOfSpeechLabel);
-                    PartOfSpeechType  = context.Get<PartOfSpeech>(WordBaseCompletionKeys.PartOfSpeechType);
-                    //Synonyms          = string.Join(", ", context.Get<IEnumerable<string>>(WordCompletionKeys.Synonyms));
-                    //Antonyms          = string.Join(", ", context.Get<IEnumerable<string>>(WordCompletionKeys.Antonyms));
-                    UsageFrequency    = context.Get<WordUsageFrequenсy>(WordBaseCompletionKeys.UsageFrequency);
-                }
+                    case SessionResult.Cancelled:
+                        break;
 
-                await Task.CompletedTask;
+                    case SessionResult.Error:
+                        throw new Exception(context.ErrorMessage ?? "An error occurred during word completion.");
+
+                    case SessionResult.Success:
+                        break;
+
+                    default:
+                        throw new NotImplementedException();
+                }
             };
 
             await session.RunAsync();

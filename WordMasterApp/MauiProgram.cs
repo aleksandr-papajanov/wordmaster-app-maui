@@ -5,7 +5,6 @@ using OpenAI.Chat;
 using WordMaster.AIClientProvider;
 using WordMaster.Data;
 using WordMaster.Data.Services;
-using WordMaster.Data.Services.Interfaces;
 using WordMaster.Generation;
 using WordMaster.Generation.Interfaces;
 using WordMasterApp.EntityViewModels.DIFactories;
@@ -13,6 +12,8 @@ using WordMasterApp.Features;
 using WordMasterApp.Features.DeckList;
 using WordMasterApp.Features.MainPage;
 using WordMasterApp.Features.MessageContainer;
+using WordMasterApp.Features.MessageContainer.Interfaces;
+using WordMasterApp.Features.RelatedWords;
 using WordMasterApp.Features.WordDetails;
 using WordMasterApp.Features.WordList;
 using WordMasterApp.Features.WordUsage;
@@ -38,8 +39,9 @@ namespace WordMasterApp
             builder.Services.AddSingleton<ILanguageEntityViewModelFactory, LanguageEntityViewModelFactory>();
             builder.Services.AddSingleton<IDeckEntityViewModelFactory, DeckEntityViewModelFactory>();
             builder.Services.AddSingleton<IWordEntityViewModelFactory, WordEntityViewModelFactory>();
+            builder.Services.AddSingleton<IWordDetailsEntityViewModelFactory, WordDetailsEntityViewModelFactory>();
             builder.Services.AddSingleton<IWordUsageEntityViewModelFactory, WordUsageEntityViewModelFactory>();
-            builder.Services.AddSingleton<IRelatedWordEntityViewModelFactory, RelatedWordEntityViewModelFactory>();
+            builder.Services.AddSingleton<IWordRelationEntityViewModelFactory, WordRelationEntityViewModelFactory>();
 
             // NOTE:
             // We explicitly use Lazy<T> here for factories that reference each other *up* the object graph,
@@ -56,13 +58,10 @@ namespace WordMasterApp
             // Data and services
             builder.Services.AddSingleton<RealmDataContext>();
             builder.Services.AddTransient(typeof(IRepository<>), typeof(RealmRepository<>));
-
-            builder.Services.AddTransient<ILanguageService, LanguageService>();
             builder.Services.AddTransient<IDeckService, DeckService>();
             builder.Services.AddTransient<IWordService, WordService>();
-            builder.Services.AddTransient<IRelatedWordService, RelatedWordService>();
-            builder.Services.AddTransient<IWordUsageService, WordUsageService>();
-            builder.Services.AddTransient<IGenerationService, GenerationService>();
+
+            builder.Services.AddTransient<ISessionBuilder, SessionBuilder>();
 
             // AI client provider
             builder.Services.AddSingleton<IAIClientProvider, AIClientProvider>();
@@ -92,6 +91,10 @@ namespace WordMasterApp
             builder.Services.AddTransient<WordUsageView>();
             builder.Services.AddTransient<WordUsageViewViewModel>();
             builder.Services.AddTransient<IWordUsageViewViewModelFactory, WordUsageViewViewModelFactory>();
+            
+            builder.Services.AddTransient<RelatedWordsView>();
+            builder.Services.AddTransient<RelatedWordsViewViewModel>();
+            builder.Services.AddTransient<IRelatedWordsViewViewModelFactory, RelatedWordsViewViewModelFactory>();
             
             builder.Services.AddTransient<MessageContainer>();
             builder.Services.AddTransient<MessageContainerViewModel>();

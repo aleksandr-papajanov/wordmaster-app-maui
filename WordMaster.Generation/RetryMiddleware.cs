@@ -2,7 +2,7 @@
 
 namespace WordMaster.Generation
 {
-    internal class RetryMiddleware : IGenerationMiddleware
+    internal class RetryMiddleware : IMiddleware
     {
         private readonly int _maxRetries;
 
@@ -11,7 +11,7 @@ namespace WordMaster.Generation
             _maxRetries = maxRetries;
         }
 
-        public async Task InvokeAsync(IGenerationContext context, IGenerationStage stage, Func<IGenerationContext, Task> next)
+        public async Task InvokeAsync(IContext context, ISessionController control, IStage stage, Func<IContext, ISessionController, Task> next)
         {
             int attempts = 0;
 
@@ -19,7 +19,7 @@ namespace WordMaster.Generation
             {
                 try
                 {
-                    await next(context);
+                    await next(context, control);
                     return;
                 }
                 catch (Exception) when (++attempts < _maxRetries)
@@ -29,7 +29,7 @@ namespace WordMaster.Generation
                 catch (Exception e)
                 {
                     context.ErrorMessage = $"{e.Message} (Attempted {attempts}/{_maxRetries})";
-                    context.SessionResult = GenerationSessionResult.Error;
+                    context.SessionResult = SessionResult.Error;
                     return;
                 }
             }

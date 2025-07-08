@@ -9,16 +9,19 @@ public partial class WordListView : ContentView, IViewFor<WordListViewViewModel>
         BindableProperty.Create(nameof(ViewModel), typeof(WordListViewViewModel), typeof(WordListView),
             propertyChanged: (bindable, _, value) =>
             {
+                if (bindable is not WordListView view || value is not WordListViewViewModel viewModel)
+                    return;
+
+                view.ViewModel = viewModel;
+                view.BindingContext = viewModel;
             });
 
-    // Implementation of IViewFor<>.ViewModel
     public WordListViewViewModel? ViewModel
     {
-        get => BindingContext as WordListViewViewModel ?? null;
-        set => BindingContext = value;
+        get => (WordListViewViewModel?)GetValue(ViewModelProperty);
+        set => SetValue(ViewModelProperty, value);
     }
 
-    // Explicit implementation of IViewFor.ViewModel
     object? IViewFor.ViewModel
     {
         get => ViewModel;
@@ -27,13 +30,19 @@ public partial class WordListView : ContentView, IViewFor<WordListViewViewModel>
 
     public WordListView(WordListViewViewModel viewModel)
     {
-        InitializeComponent();
         ViewModel = viewModel;
+        BindingContext = viewModel;
 
-        this.WhenActivated(disposables =>
-        {
-            this.OneWayBind(ViewModel, vm => vm, view => view.BindingContext)
-                .DisposeWith(disposables);
-        });
+        InitializeComponent();
+
+        this.WhenAnyValue(x => x.ViewModel)
+            .WhereNotNull()
+            .Subscribe(vm =>
+            {
+                this.WhenActivated(disposables =>
+                {
+                    // Bindings
+                });
+            });
     }
 }

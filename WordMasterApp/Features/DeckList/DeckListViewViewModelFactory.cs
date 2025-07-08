@@ -1,5 +1,5 @@
 ﻿using DynamicData;
-using WordMaster.Data.Services.Interfaces;
+using WordMaster.Data.Services;
 using WordMasterApp.EntityViewModels.DIFactories;
 
 namespace WordMasterApp.Features.DeckList
@@ -23,7 +23,7 @@ namespace WordMasterApp.Features.DeckList
         public DeckListViewModel Create()
         {
             var stream = _deckService
-                .GetStream()
+                .GetDecksStream()
                 .Transform(_deckFactory.Create);
 
             return new DeckListViewModel(stream);

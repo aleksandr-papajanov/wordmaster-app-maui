@@ -2,9 +2,170 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:WordMasterApp.Features.MessageContainer"
+             xmlns:components="clr-namespace:WordMasterApp.Components"
              x:Class="WordMasterApp.Features.MessageContainer.MessageContainer">
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <!-- Styles -->
+            <Style x:Key="BorderMessageOuter" TargetType="Border">
+                <Setter Property="Padding" Value="10" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 20" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+            </Style>
 
+            <Style x:Key="BorderMessageHeader" TargetType="Border">
+                <Setter Property="Padding" Value="5" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+                <Setter Property="HorizontalOptions" Value="Start" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+            </Style>
+
+            <Style x:Key="LabelMessageHeader" TargetType="Label">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                <Setter Property="FontFamily" Value="{StaticResource AppFontBold}" />
+                <Setter Property="Style" Value="{StaticResource LabelRegular}" />
+            </Style>
+
+            <!-- Error -->
+            <DataTemplate x:Key="ErrorTemplate">
+                <Border Style="{StaticResource BorderMessageOuter}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}">
+                    <VerticalStackLayout Spacing="10">
+                        <Border Style="{StaticResource BorderMessageHeader}">
+                            <Label Text="{Binding Title}"
+                                   TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                                   Style="{StaticResource LabelMessageHeader}" />
+                        </Border>
+
+                        <Label Text="{Binding Message}" Style="{StaticResource LabelRegular}" />
+
+                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="10"
+                                               BindableLayout.ItemsSource="{Binding Actions}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Text="{Binding Text}" Command="{Binding Invoke}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </DataTemplate>
+            
+            <!-- Error -->
+            <DataTemplate x:Key="NotificationTemplate">
+                <Border Style="{StaticResource BorderMessageOuter}">
+                    <VerticalStackLayout Spacing="10">
+                        <Border Style="{StaticResource BorderMessageHeader}">
+                            <Label Text="{Binding Title}"
+                                   Style="{StaticResource LabelMessageHeader}" />
+                        </Border>
+
+                        <Label Text="{Binding Message}" Style="{StaticResource LabelRegular}" />
+
+                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="10"
+                                               BindableLayout.ItemsSource="{Binding Actions}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Text="{Binding Text}" Command="{Binding Invoke}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </DataTemplate>
+
+            <!-- Word basic info template -->
+            <DataTemplate x:Key="WordBasicCompletionConfirmationTemplate">
+                <Border Style="{StaticResource BorderMessageOuter}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}">
+                    <VerticalStackLayout Spacing="10">
+                        <Border Style="{StaticResource BorderMessageHeader}">
+                            <Label Text="{Binding Title}"
+                                   TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                                   Style="{StaticResource LabelMessageHeader}" />
+                        </Border>
+
+                        <Label Text="{Binding Text}" Style="{StaticResource LabelH2}" />
+                        <Label Text="{Binding Translation}" Style="{StaticResource LabelRegular}" />
+                        <Label Text="{Binding Definition}" Style="{StaticResource LabelCaption}" />
+                        <Label Text="Usage frequency:" Style="{StaticResource LabelSubcaption}" />
+
+                        <components:SegmentedProgressBar Progress="{Binding Progress}"
+                                                         StartColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                                                         EndColor="{AppThemeBinding Light={StaticResource SecondaryVariantLight}, Dark={StaticResource SecondaryVariantDark}}"
+                                                         BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                                                         Segments="5" />
+
+                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="10"
+                                   BindableLayout.ItemsSource="{Binding Actions}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Text="{Binding Text}" Command="{Binding Invoke}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </DataTemplate>
+
+            <!-- Word examples template -->
+            <DataTemplate x:Key="WordUsagesCompletionConfirmationTemplate">
+                <Border Style="{StaticResource BorderMessageOuter}"
+            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}">
+                    <VerticalStackLayout Spacing="10">
+                        <Border Style="{StaticResource BorderMessageHeader}">
+                            <Label Text="{Binding Title}"
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                       Style="{StaticResource LabelMessageHeader}" />
+                        </Border>
+
+                        <Label Text="{Binding Word}" Style="{StaticResource LabelH2}" />
+
+                        <Label Text="Examples:" Style="{StaticResource LabelSubcaption}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Sentences}"
+                                             Spacing="2">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
+                                        <Frame.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                        </Frame.GestureRecognizers>
+
+                                        <Grid ColumnDefinitions="50,*"
+                                              RowDefinitions="Auto, Auto">
+                                            <CheckBox Grid.Column="0" Grid.RowSpan="2" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                            <Label Grid.Column="1" Grid.Row="0" Text="{Binding Text}" Style="{StaticResource LabelRegular}" />
+                                            <Label Grid.Column="1" Grid.Row="1" Text="{Binding Translation}" Style="{StaticResource LabelCaption}" />
+                                        </Grid>
+                                    </Frame>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+
+                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="10"
+                                               BindableLayout.ItemsSource="{Binding Actions}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Text="{Binding Text}" Command="{Binding Invoke}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </DataTemplate>
+
+            <!-- Template Selector -->
+            <local:MessageTemplateSelector x:Key="MessageTemplateSelector"
+                                           ErrorTemplate="{StaticResource ErrorTemplate}"
+                                           NotificationTemplate="{StaticResource NotificationTemplate}"
+                                           WordBasicCompletionConfirmationTemplate="{StaticResource WordBasicCompletionConfirmationTemplate}"
+                                           WordUsagesCompletionConfirmationTemplate="{StaticResource WordUsagesCompletionConfirmationTemplate}" />
+        </ResourceDictionary>
+    </ContentView.Resources>
+    
     <VerticalStackLayout x:Name="MessageStack"
+                         BindableLayout.ItemsSource="{Binding Messages}"
+                         BindableLayout.ItemTemplateSelector="{StaticResource MessageTemplateSelector}"
                          Spacing="10" />
     
 </ContentView>

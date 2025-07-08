@@ -73,7 +73,7 @@
     </Style>
 
     <Style TargetType="Label"  x:Key="LabelRegularLink" BasedOn="{StaticResource LabelRegular}">
-        <Setter Property="TextDecorations" Value="Underline" />
+        <Setter Property="TextDecorations" Value="None" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>

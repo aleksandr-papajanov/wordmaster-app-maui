@@ -6,32 +6,17 @@ using WordMaster.Generation.Interfaces;
 
 namespace WordMasterApp.EntityViewModels.Actions
 {
-    public readonly struct WordEntityViewModelActions
+    public class WordEntityViewModelActions : EntityViewModelActionsBase
     {
-        public Func<DeckEntityViewModel> GetParentDeck { get; }
-        public Func<string, IObservable<IChangeSet<WordUsageEntityViewModel>>> GetUsagesStream { get; }
-        public Func<WordRelationType, IObservable<IChangeSet<RelatedWordEntityViewModel>>> GetRelatedWordsStream { get; }
-        public Func<Task> CreateAsync { get; }
-        public Func<Task> DeleteAsync { get; }
-        public Func<Action<Transaction>, Task> UpdateAsync { get; }
-        public Func<WordCompletionRequest, IGenerationSession> CompleteWordFull { get; }
-
-        public WordEntityViewModelActions(
-            Func<DeckEntityViewModel> getParentDeck,
-            Func<string, IObservable<IChangeSet<WordUsageEntityViewModel>>> getUsagesStream,
-            Func<WordRelationType, IObservable<IChangeSet<RelatedWordEntityViewModel>>> getRelatedWordsStream,
-            Func<Task> createAsync,
-            Func<Task> deleteAsync,
-            Func<Action<Transaction>, Task> updateAsync,
-            Func<WordCompletionRequest, IGenerationSession> completeWordFull)
-        {
-            GetParentDeck = getParentDeck;
-            GetUsagesStream = getUsagesStream;
-            GetRelatedWordsStream = getRelatedWordsStream;
-            CreateAsync = createAsync;
-            DeleteAsync = deleteAsync;
-            UpdateAsync = updateAsync;
-            CompleteWordFull = completeWordFull;
-        }
+        public required Func<WordDetailsEntityViewModel?> GetDetails { get; set; }
+        public required Func<DeckEntityViewModel> GetParentDeck { get; set; }
+        public required Func<string, string, PartOfSpeech, Task> CreateDetails { get; set; }
+        public required Func<string, WordRelationType, Task> CreateRelation { get; set; }
+        public required Func<string, string, Task> CreateUsage { get; set; }
+        public required Func<string, IObservable<IChangeSet<WordUsageEntityViewModel>>> GetUsagesStream { get; set; }
+        public required Func<WordRelationType, IObservable<IChangeSet<WordRelationEntityViewModel>>> GetRelatedWordsStream { get; set; }
+        public required Func<Task> CreateAsync { get; set; }
+        public required Func<DeckEntityViewModel, Task> DeleteAsync { get; set; }
+        public required Func<Action<Transaction>, Task> UpdateAsync { get; set; }
     }
 }

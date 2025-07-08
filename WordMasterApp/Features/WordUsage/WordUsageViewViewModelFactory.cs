@@ -1,4 +1,4 @@
-﻿using WordMaster.Data.Services.Interfaces;
+﻿using WordMaster.Data.Services;
 using WordMaster.Generation.Interfaces;
 using WordMasterApp.EntityViewModels;
 using WordMasterApp.EntityViewModels.DIFactories;
@@ -12,14 +12,14 @@ namespace WordMasterApp.Features.WordUsage
 
     public class WordUsageViewViewModelFactory : IWordUsageViewViewModelFactory
     {
-        private readonly IWordUsageService _usageService;
-        private readonly IGenerationService _aiService;
+        private readonly IWordService _wordService;
+        private readonly ISessionBuilder _generator;
         private readonly IWordUsageEntityViewModelFactory _usageFactory;
 
-        public WordUsageViewViewModelFactory(IWordUsageService usageService, IGenerationService aiService, IWordUsageEntityViewModelFactory usageFactory)
+        public WordUsageViewViewModelFactory(IWordService wordService, ISessionBuilder generator, IWordUsageEntityViewModelFactory usageFactory)
         {
-            _usageService = usageService;
-            _aiService = aiService;
+            _wordService = wordService;
+            _generator = generator;
             _usageFactory = usageFactory;
         }
 

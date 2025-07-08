@@ -1,29 +1,31 @@
 ﻿using DynamicData;
+using Microsoft.Maui.Controls;
+using Microsoft.VisualBasic;
 using ReactiveUI;
-using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using WordMaster.Common;
+using WordMaster.Generation;
+using WordMaster.Generation.DTOs;
+using WordMaster.Generation.Interfaces;
+using WordMaster.Generation.Stages;
 using WordMasterApp.EntityViewModels;
-using WordMasterApp.Features.MessageContainer;
+using WordMasterApp.Features.MessageContainer.Interfaces;
+using WordMasterApp.Features.MessageContainer.Messages;
+using WordMasterApp.Features.RelatedWords;
 using WordMasterApp.Features.WordUsage;
 using WordMasterApp.Messages;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace WordMasterApp.Features
 {
     public partial class WordDetailsViewModel : ReactiveObject, IActivatableViewModel
     {
         private readonly IMessageService _messageService;
-        private readonly IWordUsageViewViewModelFactory _wordUsageFactory;
 
         private readonly ObservableAsPropertyHelper<WordEntityViewModel?> _currentWord;
         public WordEntityViewModel? CurrentWord => _currentWord.Value;
-
-        private ReadOnlyObservableCollection<RelatedWordEntityViewModel> _synonyms = null!;
-        public ReadOnlyObservableCollection<RelatedWordEntityViewModel> Synonyms => _synonyms;
-
-        private ReadOnlyObservableCollection<RelatedWordEntityViewModel> _antonyms = null!;
-        public ReadOnlyObservableCollection<RelatedWordEntityViewModel> Antonyms => _antonyms;
 
         private bool _hasTriedToUpdate = false;
         public bool HasTriedToUpdate
@@ -34,12 +36,15 @@ namespace WordMasterApp.Features
 
         // ViewModels
         public WordUsageViewViewModel WordUsageViewModel { get; }
+        public RelatedWordsViewViewModel RelatedWordsViewModel { get; }
 
         // Commands
         public ICommand UpdateCommand { get; private set; }
         public ICommand AutoCompleteCommand { get; private set; }
-        public ICommand ExplainRelatedWordCommand { get; private set; }
 
+        // Interaction for stages
+        public Interaction<IContext, ConfirmRelatedWordCompletionMessageResult> WordBasicsConfirmationInteraction { get; } = new();
+        public Interaction<IContext, ConfirmRelatedWordUsagesCompletionMessageResult> WordUsagesConfirmationInteraction { get; } = new();
 
         // Implementing IActivatableViewModel
         public ViewModelActivator Activator { get; } = new ViewModelActivator();
@@ -47,21 +52,19 @@ namespace WordMasterApp.Features
 
         public WordDetailsViewModel(IObservable<WordEntityViewModel?> word,
                                     IMessageService messageService,
-                                    IWordUsageViewViewModelFactory wordUsageFactory)
+                                    IWordUsageViewViewModelFactory wordUsageFactory,
+                                    IRelatedWordsViewViewModelFactory relatedWordsFactory)
         {
             _messageService = messageService;
-            _wordUsageFactory = wordUsageFactory;
 
             word.ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, x => x.CurrentWord, out _currentWord);
-
-            //word.ObserveOn(RxApp.MainThreadScheduler)
-            //    .Subscribe(x => CurrentWord = x);
 
             SetupCommands();
 
             // important to create the view models in constructor for propper binding
             WordUsageViewModel = wordUsageFactory.Create(word);
+            RelatedWordsViewModel = relatedWordsFactory.Create(word);
 
             this.WhenActivated(disposables =>
             {
@@ -71,25 +74,65 @@ namespace WordMasterApp.Features
                 })
                 .DisposeWith(disposables);
 
-                this.WhenAnyValue(x => x.CurrentWord)
-                    .Select(x => x != null && x.IsManaged
-                        ? x.Synonyms
-                        : Observable.Return(ChangeSet<RelatedWordEntityViewModel>.Empty))
-                    .Switch()
-                    .ObserveOn(RxApp.MainThreadScheduler)
-                    .Bind(out _synonyms)
-                    .Subscribe(_ => this.RaisePropertyChanged(nameof(Synonyms)))
-                    .DisposeWith(disposables);
-                
-                this.WhenAnyValue(x => x.CurrentWord)
-                    .Select(x => x != null && x.IsManaged
-                        ? x.Antonyms
-                        : Observable.Return(ChangeSet<RelatedWordEntityViewModel>.Empty))
-                    .Switch()
-                    .ObserveOn(RxApp.MainThreadScheduler)
-                    .Bind(out _antonyms)
-                    .Subscribe(_ => this.RaisePropertyChanged(nameof(Antonyms)))
-                    .DisposeWith(disposables);
+                WordBasicsConfirmationInteraction.RegisterHandler(async interaction =>
+                {
+                    var request = interaction.Input;
+                    var wordBasics = request.ToWordBasicsCompletionResponse();
+
+                    var box = new ConfirmRelatedWordBasicCompletionMessage(
+                        wordBasics.Word,
+                        wordBasics.Translation,
+                        wordBasics.Definition,
+                        wordBasics.UsageFrequency);
+
+                    _messageService.Publish(box);
+
+                    var result = (ConfirmRelatedWordCompletionMessageResult?)await box.Completion
+                        ?? throw new InvalidOperationException("Confirmation result cannot be null.");
+
+                    interaction.SetOutput(result);
+                });
+
+                WordUsagesConfirmationInteraction.RegisterHandler(async interaction =>
+                {
+                    var request = interaction.Input;
+                    var wordUsages = request.ToWordUsagesCompletionResponse();
+
+                    if (usagesBox == null)
+                    {
+                        usagesBox = new ConfirmRelatedWordUsagesCompletionMessage(wordUsages.Word, wordUsages.Sentences);
+                        usagesBox.CloseOnAction = false;
+
+                        _messageService.Publish(usagesBox);
+                    }
+                    else
+                    {
+                        usagesBox.AddSentencesFromDictionary(wordUsages.Sentences);
+                    }
+
+                    var result = (ConfirmRelatedWordUsagesCompletionMessageResult?)await usagesBox.Completion
+                        ?? throw new InvalidOperationException("Confirmation result cannot be null.");
+
+                    switch (result)
+                    {
+                        case ConfirmRelatedWordUsagesCompletionMessageResult.TryAgain:
+                            usagesBox.RemoveUnselectedSentences();
+                            break;
+
+                        case ConfirmRelatedWordUsagesCompletionMessageResult.AddToDeck:
+                            var sentences = usagesBox.GetSelectedSentencesAsDictionary();
+                            request.Set(nameof(WordCompletionResponse.Sentences), sentences);
+                            usagesBox.Close();
+                            break;
+
+                        case ConfirmRelatedWordUsagesCompletionMessageResult.Cancel:
+                        default:
+                            usagesBox.Close();
+                            break;
+                    }
+
+                    interaction.SetOutput(result);
+                });
             });
         }
 
@@ -105,53 +148,62 @@ namespace WordMasterApp.Features
             //var canComplete = Observable.CombineLatest(managed, (managed) => !managed);
 
             UpdateCommand = ReactiveCommand.CreateFromTask(UpdateWordAsync, canUpdate);
-            AutoCompleteCommand = ReactiveCommand.CreateFromTask(AutoCompleteAsync, isNew);
-            ExplainRelatedWordCommand = ReactiveCommand.CreateFromTask<RelatedWordEntityViewModel>(ExplainRelatedWordAsync, word);
+            AutoCompleteCommand = ReactiveCommand.CreateFromTask(AiCompleteAsync, isNew);
+            
         }
 
-        private async Task ExplainRelatedWordAsync(RelatedWordEntityViewModel relatedWord)
-        {
-            //if (relatedWord == null || CurrentWord == null || relatedWord.WordId != CurrentWord.Id)
-            //    return;
-
-            //var session = _wordModuleService.Generations.CompleteWordBase(new WordCompletionRequest(
-            //    Word: relatedWord.Text,
-            //    SourceLanguage: CurrentWord?.Deck?.SourceLanguage?.Name ?? throw new Exception("Source language is not set for the current deck."),
-            //    TargetLanguage: CurrentWord?.Deck?.TargetLanguage?.Name ?? throw new Exception("Target language is not set for the current deck.")
-            //));
-
-            //session.OnComplete += async (context) =>
-            //{
-            //    if (context.SessionResult == GenerationSessionResult.Error)
-            //    {
-            //        _messageService.Publish(new ErrorMessage(context.ErrorMessage ?? "An error occurred during word completion."));
-            //    }
-            //    else if (context.SessionResult == GenerationSessionResult.Success)
-            //    {
-            //        var text = context.Get<string>(WordBaseCompletionKeys.Word);
-            //        var trans = context.Get<string>(WordBaseCompletionKeys.Translation);
-            //        var def = context.Get<string>(WordBaseCompletionKeys.Definition);
-            //        var freq = context.Get<WordUsageFrequenсy>(WordBaseCompletionKeys.UsageFrequency);
-
-            //        var box = new ConfirmWordCompletionMessage(text, trans, def, freq);
-
-                    
-
-            //        _messageService.Publish(box);
-            //    }
-
-            //    await Task.CompletedTask;
-            //};
-
-            //await session.RunAsync();
-        }
-
-        private async Task AutoCompleteAsync()
+        private async Task AiCompleteAsync()
         {
             if (CurrentWord == null)
                 return;
 
-            await CurrentWord.AutoCompleteAsync((message) => _messageService.Publish(message));
+            await CurrentWord.AiCompleteAsync(WordBasicsConfirmationInteraction, WordUsagesConfirmationInteraction);
+        }
+
+
+        private ConfirmRelatedWordUsagesCompletionMessage? usagesBox = null;
+
+
+        private async Task ConfirmUsages(WordCompletionResponse response, StageInteractionRequest interaction)
+        {
+            if (usagesBox == null)
+            {
+                usagesBox = new ConfirmRelatedWordUsagesCompletionMessage(response.Word, response.Sentences);
+                usagesBox.CloseOnAction = false;
+
+                _messageService.Publish(usagesBox);
+            }
+            else
+            {
+                usagesBox.AddSentencesFromDictionary(response.Sentences);
+            }
+
+            // Handle the result of the confirmation box
+            Func<Task> action = await usagesBox.Completion switch
+            {
+                ConfirmRelatedWordUsagesCompletionMessageResult.TryAgain => async () =>
+                {
+                    usagesBox.RemoveUnselectedSentences();
+                    await interaction.SessionControl.RepeatStage();
+                }
+                ,
+                ConfirmRelatedWordUsagesCompletionMessageResult.AddToDeck => async () =>
+                {
+                    response.Sentences = usagesBox.GetSelectedSentencesAsDictionary();
+
+                    // to next stage
+                    usagesBox.Close();
+                    await interaction.SessionControl.ToNextStage();
+                }
+                ,
+                _ => async () =>
+                {
+                    usagesBox.Close();
+                    await interaction.SessionControl.Cancel();
+                }
+            };
+
+            await action();
         }
 
         private async Task UpdateWordAsync()
@@ -165,8 +217,6 @@ namespace WordMasterApp.Features
 
                 if (CurrentWord.IsManaged)
                 {
-                    MessageBus.Current.SendMessage(new WordCreatedMessage(CurrentWord.Id));
-
                     HasTriedToUpdate = false;
                 }
             }

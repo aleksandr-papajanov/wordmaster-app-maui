@@ -6,6 +6,8 @@ using WordMasterApp.Components.LoadingStripe;
 using WordMasterApp.EntityViewModels;
 using WordMasterApp.Features.DeckList;
 using WordMasterApp.Features.MessageContainer;
+using WordMasterApp.Features.MessageContainer.Interfaces;
+using WordMasterApp.Features.MessageContainer.Messages;
 using WordMasterApp.Features.WordDetails;
 using WordMasterApp.Features.WordList;
 using WordMasterApp.Messages;
@@ -167,6 +169,32 @@ namespace WordMasterApp.Features.MainPage
             });
             
             
+        }
+
+        int i = 0;
+        ErrorMessage box;
+        public async Task Test()
+        {
+            if (i == 0)
+            {
+                box = new ErrorMessage("This is an error message!");
+                _messageService.Publish(box);
+                var res = await box.Completion;
+            }
+            else if (i == 1)
+            {
+                //var res = await box.Completion;
+            }
+            else if (i == 2)
+            {
+                //var res = await box.Completion;
+            }
+            else if (i == 3)
+            {
+                //box.Close();
+            }
+
+            i = i++ > 3 ? 0 : i;
         }
     }
 }

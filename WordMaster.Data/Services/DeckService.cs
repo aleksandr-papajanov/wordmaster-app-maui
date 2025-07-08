@@ -2,21 +2,30 @@
 using DynamicData.Binding;
 using Realms;
 using WordMaster.Data.Models;
-using WordMaster.Data.Services.Interfaces;
 
 namespace WordMaster.Data.Services
 {
+    public interface IDeckService
+    {
+        IObservable<IChangeSet<Deck>> GetDecksStream();
+
+        Deck? FindByWord(Word word);
+    }
     public class DeckService : IDeckService
     {
+        private readonly IRepository<Language> _languageRepository;
         private readonly IRepository<Deck> _deckRepository;
+        private readonly IRepository<WordDeck> _wordDeckRepository;
 
-        public DeckService(IRepository<Deck> deckRepository)
+        public DeckService(IRepository<Deck> deckRepository, IRepository<WordDeck> wordDeckRepository, IRepository<Language> languageRepository)
         {
             _deckRepository = deckRepository;
+            _wordDeckRepository = wordDeckRepository;
+            _languageRepository = languageRepository;
         }
 
 
-        public IObservable<IChangeSet<Deck>> GetStream()
+        public IObservable<IChangeSet<Deck>> GetDecksStream()
         {
             var query = _deckRepository.All;
 
@@ -25,24 +34,18 @@ namespace WordMaster.Data.Services
                 .ToObservableChangeSet<IRealmCollection<Deck>, Deck>();
         }
 
-        public Deck? Find(Guid id)
+        public Deck? FindByWord(Word word)
         {
-            return _deckRepository.Find(id);
-        }
+            var found = _wordDeckRepository.All
+                .Where(w => w.Word == word)
+                .FirstOrDefault();
 
-        public Task CreateAsync(Deck word)
-        {
-            throw new NotImplementedException();
-        }
+            if (found == null)
+            {
+                return null;
+            }
 
-        public Task DeleteAsync(Deck word)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateAsync(Deck word, Action<Transaction> updater)
-        {
-            throw new NotImplementedException();
+            return found.Deck;
         }
     }
 }

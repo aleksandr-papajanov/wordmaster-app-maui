@@ -4,7 +4,7 @@ namespace WordMaster.Generation
 {
     public record StageInteractionRequest(
         string StageName,
-        IGenerationSessionController SessionControl,
-        IGenerationContextSnapshot ContextSnapshot
+        ISessionController SessionControl,
+        IContext Context
     );
 }

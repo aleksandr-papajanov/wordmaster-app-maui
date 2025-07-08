@@ -1,24 +1,15 @@
 ﻿using Realms;
+using WordMaster.Generation.DTOs;
+using WordMaster.Generation.Interfaces;
 
 namespace WordMasterApp.EntityViewModels.Actions
 {
-    public readonly struct RelatedWordEntityViewModelActions
+    public class RelatedWordEntityViewModelActions : EntityViewModelActionsBase
     {
-        public Func<WordEntityViewModel?> GetParentWord { get; }
-        public Func<Task> CreateAsync { get; }
-        public Func<Task> DeleteAsync { get; }
-        public Func<Action<Transaction>, Task> UpdateAsync { get; }
-
-        public RelatedWordEntityViewModelActions(
-            Func<WordEntityViewModel?> getParentWord,
-            Func<Task> createAsync,
-            Func<Task> deleteAsync,
-            Func<Action<Transaction>, Task> updateAsync)
-        {
-            GetParentWord = getParentWord;
-            CreateAsync = createAsync;
-            DeleteAsync = deleteAsync;
-            UpdateAsync = updateAsync;
-        }
+        public required Func<WordEntityViewModel> GetParentWord { get; set; }
+        public required Func<WordEntityViewModel> GetRelatedWord { get; set; }
+        public required Func<Task> CreateAsync { get; set; }
+        public required Func<Task> DeleteAsync { get; set; }
+        public required Func<Action<Transaction>, Task> UpdateAsync { get; set; }
     }
 }

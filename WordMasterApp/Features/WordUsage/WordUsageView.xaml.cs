@@ -11,25 +11,18 @@ public partial class WordUsageView : ContentView, IViewFor<WordUsageViewViewMode
             propertyChanged: (bindable, _, value) =>
             {
                 if (bindable is not WordUsageView view || value is not WordUsageViewViewModel viewModel)
-                {
                     return;
-                }
 
+                view.ViewModel = viewModel;
                 view.BindingContext = viewModel;
-                view.WhenActivated(disposables =>
-                {
-
-                });
             });
 
-    // Implementation of IViewFor<WordUsageViewModel>.ViewModel
     public WordUsageViewViewModel? ViewModel
     {
-        get => BindingContext as WordUsageViewViewModel ?? null;
-        set => BindingContext = value;
+        get => (WordUsageViewViewModel?)GetValue(ViewModelProperty);
+        set => SetValue(ViewModelProperty, value);
     }
 
-    // Explicit implementation of IViewFor.ViewModel
     object? IViewFor.ViewModel
     {
         get => ViewModel;
@@ -40,13 +33,19 @@ public partial class WordUsageView : ContentView, IViewFor<WordUsageViewViewMode
     {
         InitializeComponent();
 
-        this.WhenActivated(disposables =>
-        {
-            this.BindValidation(ViewModel, vm => vm.Text, v => v.TextValidationWrapper.ValidationMessage)
-                .DisposeWith(disposables);
+        this.WhenAnyValue(x => x.ViewModel)
+            .WhereNotNull()
+            .Subscribe(vm =>
+            {
+                this.WhenActivated(disposables =>
+                {
+                    // Bindings
+                    this.BindValidation(ViewModel, vm => vm.Text, v => v.TextValidationWrapper.ValidationMessage)
+                        .DisposeWith(disposables);
 
-            this.BindValidation(ViewModel, vm => vm.Translation, v => v.TranslationValidationWrapper.ValidationMessage)
-                .DisposeWith(disposables);
-        });
+                    this.BindValidation(ViewModel, vm => vm.Translation, v => v.TranslationValidationWrapper.ValidationMessage)
+                        .DisposeWith(disposables);
+                });
+            });
     }
 }

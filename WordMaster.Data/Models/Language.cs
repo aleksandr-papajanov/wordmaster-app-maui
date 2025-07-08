@@ -2,10 +2,10 @@
 
 namespace WordMaster.Data.Models
 {
-    public class Language : RealmObject
+    public partial class Language : RealmObject
     {
         [PrimaryKey]
-        public string Code { get; set; } = string.Empty;
+        public required string Code { get; set; }
         public string Name { get; set; } = string.Empty;
         
     }

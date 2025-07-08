@@ -1,90 +1,140 @@
 ﻿using OpenAI.Chat;
 using System.Text.Json;
 using WordMaster.Common;
+using WordMaster.Generation.DTOs;
 using WordMaster.Generation.Interfaces;
 
 namespace WordMaster.Generation.Stages
 {
-    internal class WordDetailsCompletionStage : IGenerationStage
+    internal class WordDetailsCompletionStage : StageBase
     {
-        public bool RequiresInteraction => false;
+        private IContext _context = null!;
+
+        protected override string InitialPrompt =>
+            $"Based on this, generate the following additional details:\r\n" +
+            $"- Pronunciation guide, if available.\r\n" +
+            $"- A clear free-text part of speech label (e.g., 'phrasal verb', 'modal verb', etc.).\r\n" +
+            $"- Select the best matching part of speech category from the predefined list.\r\n" +
+            $"- Generate a list of common synonyms for this word in [SourceLanguage].\r\n" +
+            $"- Generate a list of common antonyms for this word in [SourceLanguage].\r\n";
+
+        protected override string RetryPrompt =>
+            "The previous additional details were not satisfactory. " +
+            "Please refine the pronunciation, part of speech labels, synonyms, and antonyms to be more precise and natural.";
+
+        protected override string ToNextStagePrompt => "The provided suggestion is approved. Let's move on with it";
+        protected override string StageName => "WordDetailsCompletionStage";
+        protected override string ResponseName => "complete_word_details";
+        protected override string ResonseSchema => SetPlaceholders(Schema);
 
 
-        // Main execution
-        public async Task ExecuteAsync(IGenerationContext context)
+        private string SetPlaceholders(string text)
+            => text.Replace("[Word]",           _context.Get<string>(nameof(WordCompletionRequest.Word))           ?? throw new ArgumentNullException(nameof(WordCompletionRequest.Word), "Word cannot be null or empty."))
+                   .Replace("[Translation]",    _context.Get<string>(nameof(WordCompletionRequest.Translation))    ?? throw new ArgumentNullException(nameof(WordCompletionRequest.Translation), "Translation cannot be null or empty."))
+                   .Replace("[Definition]",     _context.Get<string>(nameof(WordCompletionRequest.Definition))     ?? throw new ArgumentNullException(nameof(WordCompletionRequest.Definition), "Definition cannot be null or empty."))
+                   .Replace("[SourceLanguage]", _context.Get<string>(nameof(WordCompletionRequest.SourceLanguage)) ?? throw new ArgumentNullException(nameof(WordCompletionRequest.SourceLanguage), "Source language cannot be null or empty."))
+                   .Replace("[TargetLanguage]", _context.Get<string>(nameof(WordCompletionRequest.TargetLanguage)) ?? throw new ArgumentNullException(nameof(WordCompletionRequest.TargetLanguage), "Target language cannot be null or empty."));
+
+        public override async Task ExecuteAsync(IContext context, ISessionController control)
         {
-            context.History.Add(new UserChatMessage(WordDetailsCompletionStageConstants.Prompt.InitialPrompt));
+            _context = context;
 
-            ChatCompletionOptions options = new()
+            await Complete(context);
+            EnsureSuccessResponse();
+            ParseResponse();
+
+            await control.ToNextStage();
+        }
+
+        private void ParseResponse()
+        {
+            if (string.IsNullOrWhiteSpace(LastResponse))
             {
-                ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
-                    jsonSchemaFormatName: WordDetailsCompletionStageConstants.ResonseName,
-                    jsonSchema: BinaryData.FromString(SetPlaceholders(context, WordDetailsCompletionStageConstants.ResonseSchema)),
-                    jsonSchemaIsStrict: true)
-            };
+                throw new Exception("Agent didn't provide a response.");
+            }
 
-            ChatCompletion completion = await context.Chat.CompleteChatAsync(context.History, options);
-
-            context.History.Add(new AssistantChatMessage(completion));
-
-            ParseResponse(completion.Content[0].Text, context);
-        }
-
-        public Task OnControllerActionAsync(GenerationSessionControllerAction action, IGenerationContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        private string SetPlaceholders(IGenerationContext context, string text)
-            => text.Replace("[Word]", context.Get<string>(WordBaseCompletionKeys.Word))
-                   .Replace("[Translation]", context.Get<string>(WordBaseCompletionKeys.Translation))
-                   .Replace("[Definition]", context.Get<string>(WordBaseCompletionKeys.Definition))
-                   .Replace("[SourceLanguage]", context.Get<string>(WordBaseCompletionKeys.SourceLanguage))
-                   .Replace("[TargetLanguage]", context.Get<string>(WordBaseCompletionKeys.TargetLanguare));
-
-        private void ParseResponse(string response, IGenerationContext context)
-        {
-            using JsonDocument doc = JsonDocument.Parse(response);
+            using JsonDocument doc = JsonDocument.Parse(LastResponse);
             var root = doc.RootElement;
 
-            if (!root.TryGetProperty("success", out var success) || !success.GetBoolean())
+            if (!root.TryGetProperty("part_of_speech_category", out var obj) ||
+                !Enum.TryParse<PartOfSpeech>(obj.GetString(), true, out var parsedPartOfSpeech))
             {
-                var message = root.TryGetProperty("error_message", out var error)
-                    ? error.GetString()
-                    : "Unknown error.";
-
-                throw new Exception($"Agent failed with: {message}");
+                throw new Exception("Part of speech category not found or invalid in response.");
             }
 
-            try
+            if (!root.TryGetProperty("synonyms", out var synonymsElement) || synonymsElement.ValueKind != JsonValueKind.Array)
             {
-                if (!root.TryGetProperty("part_of_speech_category", out var obj) ||
-                    !Enum.TryParse<PartOfSpeech>(obj.GetString(), true, out var parsedPartOfSpeech))
-                {
-                    throw new Exception("Error parsing response");
-                }
-
-                if (!root.TryGetProperty("synonyms", out var synonymsElement) || synonymsElement.ValueKind != JsonValueKind.Array)
-                {
-                    throw new Exception("Error parsing response");
-                }
-
-                if (!root.TryGetProperty("antonyms", out var antonymsElement) || antonymsElement.ValueKind != JsonValueKind.Array)
-                {
-                    throw new Exception("Error parsing response");
-                }
-
-                context.Set(WordBaseCompletionKeys.Pronunciation, root.GetProperty("pronunciation").GetString() ?? throw new Exception());
-                context.Set(WordBaseCompletionKeys.PartOfSpeechLabel, root.GetProperty("part_of_speech_free").GetString() ?? throw new Exception());
-                context.Set(WordBaseCompletionKeys.PartOfSpeechType, parsedPartOfSpeech);
-                context.Set(WordBaseCompletionKeys.Synonyms, synonymsElement.EnumerateArray().Select(s => s.GetString() ?? string.Empty).ToList());
-                context.Set(WordBaseCompletionKeys.Antonyms, antonymsElement.EnumerateArray().Select(a => a.GetString() ?? string.Empty).ToList());
-            }
-            catch (Exception)
-            {
-                throw new Exception("Error parsing response");
+                throw new Exception("Synonyms not found or invalid in response.");
             }
 
+            if (!root.TryGetProperty("antonyms", out var antonymsElement) || antonymsElement.ValueKind != JsonValueKind.Array)
+            {
+                throw new Exception("Antonyms not found or invalid in response.");
+            }
+
+            _context.Set(nameof(WordCompletionResponse.Pronunciation), root.GetProperty("pronunciation").GetString() ?? throw new Exception("Pronunciation not found in response."));
+            _context.Set(nameof(WordCompletionResponse.PartOfSpeechLabel), root.GetProperty("part_of_speech_free").GetString() ?? throw new Exception("Part of speech label not found in response."));
+            _context.Set(nameof(WordCompletionResponse.PartOfSpeechType), parsedPartOfSpeech);
+            _context.Set(nameof(WordCompletionResponse.Synonyms), synonymsElement.EnumerateArray().Select(s => s.GetString() ?? string.Empty).ToList());
+            _context.Set(nameof(WordCompletionResponse.Antonyms), antonymsElement.EnumerateArray().Select(a => a.GetString() ?? string.Empty).ToList());
         }
+
+        public static readonly string Schema = """
+        {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean",
+              "description": "Indicates whether the generation was successful. True means all fields are valid, false means there was an error."
+            },
+            "error_message": {
+              "type": "string",
+              "description": "If Success is false, this field must contain a clear explanation of what went wrong."
+            },
+            "pronunciation": {
+              "type": "string",
+              "description": "The pronunciation guide for the word, if available."
+            },
+            "part_of_speech_free": {
+              "type": "string",
+              "description": "The full, precise grammatical label in free text. E.g. 'phrasal verb', 'modal verb', 'idiomatic expression' in English."
+            },
+            "part_of_speech_category": {
+              "type": "string",
+              "enum": [
+                "noun",
+                "verb",
+                "adjective",
+                "adverb",
+                "pronoun",
+                "preposition",
+                "conjunction",
+                "interjection",
+                "article",
+                "numeral",
+                "phrase",
+                "other"
+              ],
+              "description": "One of the predefined categories for easier filtering and grouping."
+            },
+            "synonyms": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of synonyms for the word in [SourceLanguage]."
+            },
+            "antonyms": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of antonyms for the word in [SourceLanguage]."
+            }
+          },
+          "required": ["success", "error_message", "pronunciation", "part_of_speech_free", "part_of_speech_category", "synonyms", "antonyms" ],
+          "additionalProperties": false
+        }
+        """;        
     }
 }

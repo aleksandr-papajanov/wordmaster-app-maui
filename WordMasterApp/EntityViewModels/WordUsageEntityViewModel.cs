@@ -5,9 +5,10 @@ namespace WordMasterApp.EntityViewModels
 {
     public class WordUsageEntityViewModel : EntityViewModelBase<WordUsage>
     {
-        private WordUsageEntityViewModelActions _actions;
+        private WordUsageEntityViewModelActions? _actions;
         public WordUsageEntityViewModelActions Actions
         {
+            get => _actions ?? throw new InvalidOperationException("Actions must be set before using this view model.");
             set { _actions = value; }
         }
 
@@ -16,12 +17,10 @@ namespace WordMasterApp.EntityViewModels
         public string Translation { get; set; } = string.Empty;
 
         // Read-only properties
-        public Guid Id => _entity.Id;
         public DateTimeOffset CreatedAt => _entity.CreatedAt;
-        public Guid WordId => _entity.WordId;
 
         //Navigation properties
-        public WordEntityViewModel? Word => _actions.GetParentWord();
+        public WordEntityViewModel? Word => Actions.GetParentWord();
 
 
         public WordUsageEntityViewModel(WordUsage entity) : base(entity) { }
@@ -48,7 +47,7 @@ namespace WordMasterApp.EntityViewModels
         {
             if (IsManaged)
             {
-                await _actions.UpdateAsync((t) =>
+                await Actions.UpdateAsync((t) =>
                 {
                     UpdateEntity();
                 });
@@ -57,13 +56,13 @@ namespace WordMasterApp.EntityViewModels
             {
                 UpdateEntity();
 
-                await _actions.CreateAsync();
+                await Actions.CreateAsync();
             }
         }
 
         public async Task DeleteAsync()
         {
-            await _actions.DeleteAsync();
+            await Actions.DeleteAsync();
         }
     }
 }

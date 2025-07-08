@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="WordMasterApp.Features.RelatedWords.RelatedWordsView"
+             x:Name="This">
+    <ContentView.Resources>
+        <Style TargetType="Label" x:Key="LabelCompletedWordLink" BasedOn="{StaticResource LabelRegularLink}">
+            <Setter Property="FontFamily" Value="{StaticResource AppFontBold}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PrimaryVariantLight}, Dark={StaticResource PrimaryVariantDark}}" />
+        </Style>
+
+        <toolkit:BoolToObjectConverter x:Key="IsCompletedConverter"
+                                       TrueObject="{StaticResource LabelCompletedWordLink}"
+                                       FalseObject="{StaticResource LabelRegularLink}" />
+    </ContentView.Resources>
+    
+    <VerticalStackLayout>
+        
+        <Grid ColumnDefinitions="*,*"
+              RowDefinitions="Auto,*"
+              ColumnSpacing="10"
+              RowSpacing="5">
+
+            <Label Grid.Column="0" Grid.Row="0"
+                   Style="{StaticResource LabelSubcaption}" Text="Synonyms:" />
+            
+            <Label Grid.Column="1" Grid.Row="0"
+                   Style="{StaticResource LabelSubcaption}" Text="Antonyms:" />
+
+            <FlexLayout Grid.Column="0" Grid.Row="1"
+                        Direction="Row"
+                        Wrap="Wrap"
+                        AlignItems="Start"
+                        AlignContent="Start"
+                        BindableLayout.ItemsSource="{Binding Synonyms}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate>
+                        <Label Style="{Binding IsCompleted, Converter={StaticResource IsCompletedConverter}}"
+                               Margin="0,0,4,0"
+                               Text="{Binding RelatedWord.Text}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding BindingContext.ExplainWordCommand, Source={x:Reference This}}"
+                                                      CommandParameter="{Binding .}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+
+            <FlexLayout Grid.Column="1" Grid.Row="1"
+                        Direction="Row"
+                        Wrap="Wrap"
+                        AlignItems="Start"
+                        AlignContent="Start"
+                        BindableLayout.ItemsSource="{Binding Antonyms}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate>
+                        <Label Style="{Binding IsCompleted, Converter={StaticResource IsCompletedConverter}}"
+                               Margin="0,0,4,0"
+                               Text="{Binding RelatedWord.Text}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding BindingContext.ExplainWordCommand, Source={x:Reference This}}"
+                                                      CommandParameter="{Binding .}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+
+        </Grid>
+        
+    </VerticalStackLayout>
+</ContentView>

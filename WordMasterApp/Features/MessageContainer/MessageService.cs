@@ -5,16 +5,17 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
+using WordMasterApp.Features.MessageContainer.Interfaces;
 
 namespace WordMasterApp.Features.MessageContainer
 {
     public class MessageService : IMessageService
     {
-        private readonly Subject<IMessageModel> _messages = new();
+        private readonly Subject<IMessageViewModel> _messages = new();
 
-        public IObservable<IMessageModel> Messages => _messages.AsObservable();
+        public IObservable<IMessageViewModel> Messages => _messages.AsObservable();
 
-        public void Publish(IMessageModel message)
+        public void Publish(IMessageViewModel message)
         {
             _messages.OnNext(message);
         }

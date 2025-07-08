@@ -20,8 +20,8 @@ namespace WordMasterApp.Features
         private readonly IWordUsageEntityViewModelFactory _factory;
         private readonly BehaviorSubject<string> _searchTextSubject = new(string.Empty);
 
+        // Current word in the UI
         private readonly ObservableAsPropertyHelper<WordEntityViewModel?> _currentWord;
-
         public WordEntityViewModel? CurrentWord => _currentWord.Value;
 
         // Main collection
@@ -102,7 +102,7 @@ namespace WordMasterApp.Features
             {
                 Observable
                     .CombineLatest(word, _searchTextSubject.AsObservable(), (word, filter) => (word, filter))
-                    .Select(x => x.word == null
+                    .Select(x => x.word == null || !x.word.IsManaged
                         ? Observable.Return(ChangeSet<WordUsageEntityViewModel>.Empty)
                         : x.word.Usages(x.filter))
                     .Switch()
@@ -185,13 +185,13 @@ namespace WordMasterApp.Features
             if (CurrentWord == null)
                 return;
 
-            var request = new WordUsageGenerationRequest(
-                word: CurrentWord.Text,
-                translation: CurrentWord.Translation,
-                sourceLang: "Swedish",
-                targetLang: "Russian",
-                count: 1
-            );
+            //var request = new WordUsageGenerationRequest(
+            //    word: CurrentWord.Text,
+            //    translation: CurrentWord.Translation,
+            //    sourceLang: "Swedish",
+            //    targetLang: "Russian",
+            //    count: 1
+            //);
 
         //    var response = await _aiService.GenerateExamples(request);
 

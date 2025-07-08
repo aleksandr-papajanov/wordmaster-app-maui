@@ -10,16 +10,19 @@ public partial class DeckListView : ContentView, IViewFor<DeckListViewModel>
         BindableProperty.Create(nameof(ViewModel), typeof(DeckListViewModel), typeof(DeckListView),
             propertyChanged: (bindable, _, value) =>
             {
+                if (bindable is not DeckListView view || value is not DeckListViewModel viewModel)
+                    return;
+
+                view.ViewModel = viewModel;
+                view.BindingContext = viewModel;
             });
 
-    // Implementation of IViewFor<>.ViewModel
     public DeckListViewModel? ViewModel
     {
-        get => BindingContext as DeckListViewModel ?? null;
-        set => BindingContext = value;
+        get => (DeckListViewModel?)GetValue(ViewModelProperty);
+        set => SetValue(ViewModelProperty, value);
     }
 
-    // Explicit implementation of IViewFor.ViewModel
     object? IViewFor.ViewModel
     {
         get => ViewModel;
@@ -29,16 +32,21 @@ public partial class DeckListView : ContentView, IViewFor<DeckListViewModel>
 
     public DeckListView(DeckListViewModel viewModel)
     {
-        InitializeComponent();
         ViewModel = viewModel;
-        
-        this.WhenActivated(disposables =>
-        {
-            this.OneWayBind(ViewModel, vm => vm, view => view.BindingContext)
-                .DisposeWith(disposables);
+        BindingContext = viewModel;
 
-            this.OneWayBind(ViewModel, vm => vm.Decks, view => view.Decks.ItemsSource)
-                .DisposeWith(disposables);
-        });
+        InitializeComponent();
+
+        this.WhenAnyValue(x => x.ViewModel)
+            .WhereNotNull()
+            .Subscribe(vm =>
+            {
+                this.WhenActivated(disposables =>
+                {
+                    // Bindings
+                    this.OneWayBind(ViewModel, vm => vm.Decks, view => view.Decks.ItemsSource)
+                        .DisposeWith(disposables);
+                });
+            });
     }
 }

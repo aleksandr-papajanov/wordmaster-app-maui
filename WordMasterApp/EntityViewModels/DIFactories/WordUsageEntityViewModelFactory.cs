@@ -1,5 +1,5 @@
 ﻿using WordMaster.Data.Models;
-using WordMaster.Data.Services.Interfaces;
+using WordMaster.Data.Services;
 using WordMasterApp.EntityViewModels.Actions;
 
 namespace WordMasterApp.EntityViewModels.DIFactories
@@ -12,63 +12,26 @@ namespace WordMasterApp.EntityViewModels.DIFactories
 
     public class WordUsageEntityViewModelFactory : IWordUsageEntityViewModelFactory
     {
-        private readonly IWordUsageService _wordUsageService;
         private readonly IWordService _wordService;
         private readonly Lazy<IWordEntityViewModelFactory> _wordFactory;
 
         public WordUsageEntityViewModelFactory(
-            IWordUsageService wordUsageService,
             IWordService wordService,
             Lazy<IWordEntityViewModelFactory> wordFactory)
         {
-            
-            _wordUsageService = wordUsageService;
             _wordService = wordService;
             _wordFactory = wordFactory;
         }
 
         private WordUsageEntityViewModelActions CreateActions(WordUsageEntityViewModel viewModel, WordUsage entity)
         {
-             return new(
-                () =>
-                {
-                    var word = _wordService.Find(viewModel.WordId);
-
-                    if (word != null)
-                    {
-                        return _wordFactory.Value.Create(word);
-                    }
-
-                    throw new Exception("Parent word not found");
-                },
-                async () =>
-                {
-                    if (entity.IsManaged)
-                    {
-                        throw new Exception("Can not create entity that already exists");
-                    }
-
-                    await _wordUsageService.CreateAsync(entity);
-                },
-                async () =>
-                {
-                    if (!entity.IsManaged)
-                    {
-                        throw new Exception("Can not delete detouched entity");
-                    }
-
-                    await _wordUsageService.DeleteAsync(entity);
-                },
-                async updater =>
-                {
-                    if (!entity.IsManaged)
-                    {
-                        throw new Exception("Can not update detouched entity");
-                    }
-
-                    await _wordUsageService.UpdateAsync(entity, updater);
-                }
-            );
+             return new WordUsageEntityViewModelActions
+             {
+                GetParentWord = () => _wordFactory.Value.Create(entity.ParentWord),
+                CreateAsync = async () => await _wordService.CreateUsageAsync(entity),
+                DeleteAsync = async () => await _wordService.DeleteUsageAsync(entity),
+                UpdateAsync = async updater => await _wordService.UpdateUsageAsync(entity, updater)
+             };
         }
 
         public WordUsageEntityViewModel Create(WordUsage entity)
@@ -93,7 +56,8 @@ namespace WordMasterApp.EntityViewModels.DIFactories
 
             var entity = new WordUsage
             {
-                WordId = parent.Id
+                Id = Guid.NewGuid(),
+                ParentWord = parent.Entity
             };
 
             var viewModel = new WordUsageEntityViewModel(entity);

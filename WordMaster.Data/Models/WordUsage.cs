@@ -2,11 +2,11 @@
 
 namespace WordMaster.Data.Models
 {
-    public class WordUsage : RealmObject
+    public partial class WordUsage : RealmObject
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
-        public Guid WordId { get; set; }
+        public required Guid Id { get; set; }
+        public required Word ParentWord { get; set; }
         public string Text { get; set; } = string.Empty;
         public string Translation { get; set; } = string.Empty;
         public DateTimeOffset CreatedAt { get; set; }

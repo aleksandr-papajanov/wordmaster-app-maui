@@ -2,23 +2,11 @@
 
 namespace WordMasterApp.EntityViewModels.Actions
 {
-    public readonly struct WordUsageEntityViewModelActions
+    public class WordUsageEntityViewModelActions : EntityViewModelActionsBase
     {
-        public Func<WordEntityViewModel?> GetParentWord { get; }
-        public Func<Task> CreateAsync { get; }
-        public Func<Task> DeleteAsync { get; }
-        public Func<Action<Transaction>, Task> UpdateAsync { get; }
-
-        public WordUsageEntityViewModelActions(
-            Func<WordEntityViewModel?> getParentWord,
-            Func<Task> createAsync,
-            Func<Task> deleteAsync,
-            Func<Action<Transaction>, Task> updateAsync)
-        {
-            GetParentWord = getParentWord;
-            CreateAsync = createAsync;
-            DeleteAsync = deleteAsync;
-            UpdateAsync = updateAsync;
-        }
+        public required Func<WordEntityViewModel?> GetParentWord { get; set; }
+        public required Func<Task> CreateAsync { get; set; }
+        public required Func<Task> DeleteAsync { get; set; }
+        public required Func<Action<Transaction>, Task> UpdateAsync { get; set; }
     }
 }

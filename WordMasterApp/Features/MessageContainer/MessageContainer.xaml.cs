@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using DynamicData;
+using ReactiveUI;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reactive;
@@ -9,10 +10,15 @@ namespace WordMasterApp.Features.MessageContainer;
 public partial class MessageContainer : ContentView, IViewFor<MessageContainerViewModel>
 {
     public static readonly BindableProperty ViewModelProperty =
-        BindableProperty.Create(
-            nameof(ViewModel),
-            typeof(MessageContainerViewModel),
-            typeof(MessageContainer));
+        BindableProperty.Create(nameof(ViewModel), typeof(MessageContainerViewModel), typeof(MessageContainer),
+            propertyChanged: (bindable, _, value) =>
+            {
+                if (bindable is not MessageContainer view || value is not MessageContainerViewModel viewModel)
+                    return;
+
+                view.ViewModel = viewModel;
+                view.BindingContext = viewModel;
+            });
 
     public MessageContainerViewModel? ViewModel
     {
@@ -32,24 +38,6 @@ public partial class MessageContainer : ContentView, IViewFor<MessageContainerVi
 
         this.WhenActivated(disposables =>
         {
-            // Авто BindingContext
-            this.OneWayBind(this, v => v.ViewModel, v => v.BindingContext)
-                .DisposeWith(disposables);
-
-            this.WhenAnyValue(v => v.ViewModel)
-                .WhereNotNull()
-                .Subscribe(vm =>
-                {
-                    if (vm.Messages is INotifyCollectionChanged coll)
-                    {
-                        coll.CollectionChanged += (s, e) => RenderMessages();
-                    }
-
-                    RenderMessages();
-                })
-                .DisposeWith(disposables);
-
-
             this.WhenAnyValue(v => v.ViewModel)
                 .WhereNotNull()
                 .Subscribe(vm =>
@@ -57,12 +45,12 @@ public partial class MessageContainer : ContentView, IViewFor<MessageContainerVi
                     vm.AnimateRemove.RegisterHandler(async interaction =>
                     {
                         var messageView = MessageStack.Children
-                            .OfType<MessageView>()
-                            .FirstOrDefault(v => v.ViewModel == interaction.Input);
+                            .OfType<View>()
+                            .FirstOrDefault(v => v.BindingContext == interaction.Input);
 
                         if (messageView != null)
                         {
-                            await messageView.AnimateDisappear();
+                            await AnimateDisappear(messageView);
                         }
 
                         interaction.SetOutput(Unit.Default);
@@ -72,12 +60,12 @@ public partial class MessageContainer : ContentView, IViewFor<MessageContainerVi
                     vm.AnimateAdd.RegisterHandler(async interaction =>
                     {
                         var messageView = MessageStack.Children
-                            .OfType<MessageView>()
-                            .FirstOrDefault(v => v.ViewModel == interaction.Input);
+                            .OfType<View>()
+                            .FirstOrDefault(v => v.BindingContext == interaction.Input);
 
                         if (messageView != null)
                         {
-                            await messageView.AnimateAppear();
+                            await AnimateAppear(messageView);
                         }
 
                         interaction.SetOutput(Unit.Default);
@@ -88,21 +76,22 @@ public partial class MessageContainer : ContentView, IViewFor<MessageContainerVi
         });
     }
 
-    void RenderMessages()
+    public Task AnimateAppear(View message)
     {
-        if (ViewModel?.Messages == null)
-            return;
+        message.Opacity = 0;
+        message.TranslationY = -50;
 
-        MessageStack.Children.Clear();
+        return Task.WhenAll(
+            message.FadeTo(1, 500, Easing.CubicIn),
+            message.TranslateTo(0, 0, 500, Easing.CubicIn)
+        );
+    }
 
-        foreach (var message in ViewModel.Messages)
-        {
-            var messageView = new MessageView
-            {
-                ViewModel = message
-            };
-
-            MessageStack.Children.Add(messageView);
-        }
+    public Task AnimateDisappear(View message)
+    {
+        return Task.WhenAll(
+            message.FadeTo(0, 500, Easing.CubicOut),
+            message.TranslateTo(0, 50, 500, Easing.CubicOut)
+        );
     }
 }
